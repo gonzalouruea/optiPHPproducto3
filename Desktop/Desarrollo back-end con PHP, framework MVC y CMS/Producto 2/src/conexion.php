@@ -1,14 +1,12 @@
 <?php
-$host = 'db';
-$dbname = 'viajes';
-$username = 'user';
-$password = 'user_password';
+define('DB_HOST','db');
+define('DB_USER','user');
+define('DB_PASS', 'user_password');
+define('DB_NAME', 'viajes');
 
 try {
-    $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $db = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    error_log("Error de conexión a la base de datos: " . $e->getMessage());
-    throw new Exception("Error de conexión a la base de datos: " . $e->getMessage());
+} catch(PDOException $e) {
+    die("Error de conexión: " . $e->getMessage());
 }
-?>
