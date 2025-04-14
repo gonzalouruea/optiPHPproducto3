@@ -80,9 +80,6 @@ if (isset($_GET['delete_vehiculo'])) {
     <?php if (isset($_GET['success'])): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars(urldecode($_GET['success'])); ?></div>
     <?php endif; ?>
-    <?php if (isset($error)): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
 
     <!-- Formulario para añadir vehículo -->
     <div class="row justify-content-center">
@@ -124,15 +121,12 @@ if (isset($_GET['delete_vehiculo'])) {
                                 <tr>
                                     <th>ID</th>
                                     <th>Descripción</th>
-                                    <th>Email del Conductor</th>
-                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($vehiculos as $vehiculo): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($vehiculo['id_vehiculo']); ?></td>
-                                        <td><?php echo htmlspecialchars($vehiculo['Descripción']); ?></td>
                                         <td><?php echo htmlspecialchars($vehiculo['email_conductor']); ?></td>
                                         <td>
                                             <a href="modificarVehiculo.php?id_vehiculo=<?php echo $vehiculo['id_vehiculo']; ?>" class="btn btn-warning btn-sm">Modificar</a>

@@ -23,21 +23,6 @@ $esAdmin = $usuario['rol'] === 'admin';
 $error = '';
 $exito = '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id_vehiculo = trim($_POST['id_vehiculo'] ?? '');
-    $id_hotel = trim($_POST['id_hotel'] ?? '');
-    $id_destino = trim($_POST['id_destino'] ?? '');
-    $id_tipo_reserva = trim($_POST['id_tipo_reserva'] ?? '');
-    $email_cliente = trim($_POST['email_cliente'] ?? '');
-    $num_viajeros = trim($_POST['num_viajeros'] ?? '');
-    $fecha_entrada = trim($_POST['fecha_entrada'] ?? null);
-    $hora_entrada = trim($_POST['hora_entrada'] ?? null);
-    $numero_vuelo_entrada = trim($_POST['numero_vuelo_entrada'] ?? null);
-    $origen_vuelo_entrada = trim($_POST['origen_vuelo_entrada'] ?? null);
-    $fecha_vuelo_salida = trim($_POST['fecha_vuelo_salida'] ?? null);
-    $hora_vuelo_salida = trim($_POST['hora_vuelo_salida'] ?? null);
-
-    // Validaciones
     if (empty($id_vehiculo) || empty($id_hotel) || empty($id_destino) || empty($id_tipo_reserva) || empty($email_cliente) || empty($num_viajeros)) {
         $error = "Todos los campos obligatorios deben estar completos.";
     } elseif (!filter_var($email_cliente, FILTER_VALIDATE_EMAIL)) {
@@ -128,35 +113,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
     }
-}
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Resultado - Isla-Transfers</title>
-</head>
-<body>
-    
-<?php include 'nav.php'; ?>
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-12 text-center">
-            <?php if (!empty($exito)): ?>
-                <h2 class="alert alert-success"><?php echo $exito; ?></h2>
-            <?php elseif (!empty($error)): ?>
-                <h2 class="alert alert-danger"><?php echo $error; ?></h2>
-            <?php endif; ?>
-            <a href="<?php echo $esAdmin ? 'panelAdmin.php' : 'panelUsuario.php'; ?>" class="btn btn-primary mt-3">Volver al Panel</a>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -167,42 +167,5 @@ $tipos_reserva = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-<script>
-// Validación del formulario con Bootstrap
-(function () {
-    'use strict'
-    var forms = document.querySelectorAll('.needs-validation')
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-
-            // Copiar el valor de id_hotel a id_destino
-            var idHotel = document.getElementById('id_hotel').value;
-            document.getElementById('id_destino').value = idHotel;
-        }, false)
-    })
-})();
-
-// Mostrar u ocultar campos según el tipo de reserva
-function mostrarCampos() {
-    var tipoReserva = document.getElementById('id_tipo_reserva').value;
-    var camposLlegada = document.getElementById('campos_llegada');
-    var camposSalida = document.getElementById('campos_salida');
-
-    camposLlegada.style.display = 'none';
-    camposSalida.style.display = 'none';
-
-    if (tipoReserva == 1 || tipoReserva == 3) { // aeropuerto_hotel o ida_vuelta
-        camposLlegada.style.display = 'block';
-    }
-    if (tipoReserva == 2 || tipoReserva == 3) { // hotel_aeropuerto o ida_vuelta
-        camposSalida.style.display = 'block';
-    }
-}
-</script>
 </body>
 </html>
