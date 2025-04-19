@@ -11,7 +11,7 @@ class Reserva
     $db = Database::getConnection();
     $sql = "SELECT r.*,
                        v.Descripción as vehiculo_nombre,
-                       h.descripcion as hotel_nombre,
+                       h.Usuario as hotel_nombre,
                        tr.Descripción as tipo_reserva_nombre
                 FROM transfer_reservas r
                 LEFT JOIN transfer_vehiculo v ON r.id_vehiculo = v.id_vehiculo
@@ -26,7 +26,7 @@ class Reserva
     $db = Database::getConnection();
     $stmt = $db->prepare("SELECT r.*,
                        v.Descripción as vehiculo_nombre,
-                       h.descripcion as hotel_nombre,
+                       h.Usuario as hotel_nombre,
                        tr.Descripción as tipo_reserva_nombre
                 FROM transfer_reservas r
                 LEFT JOIN transfer_vehiculo v ON r.id_vehiculo = v.id_vehiculo
@@ -71,57 +71,45 @@ class Reserva
 
     $localizador = self::generarLocalizador();
 
-    $db = Database::getConnection();
-    $sql = "INSERT INTO transfer_reservas
-                (localizador, id_tipo_reserva, email_cliente, fecha_reserva, fecha_modificacion,
-                 id_hotel, fecha_entrada, hora_entrada, numero_vuelo_entrada,
-                 fecha_vuelo_salida, hora_vuelo_salida, hora_recogida,
-                 num_viajeros, id_vehiculo, creado_por_admin, origen_vuelo_entrada)
-                VALUES
-                (:loc, :tipo, :email, NOW(), NOW(),
-                 :hotel, :fentrada, :hentrada, :vuelo_entrada,
-                 :fsalida, :hsalida, :hrecogida,
-                 :viajeros, :vehiculo, :admin, :origen_vuelo_entrada)";
+    try {
+      $db = Database::getConnection();
+      $sql = "INSERT INTO transfer_reservas
+                  (localizador, id_tipo_reserva, email_cliente, fecha_reserva, fecha_modificacion,
+                   id_hotel, fecha_entrada, hora_entrada, numero_vuelo_entrada,
+                   fecha_vuelo_salida, hora_vuelo_salida, hora_recogida,
+                   num_viajeros, id_vehiculo, creado_por_admin, origen_vuelo_entrada)
+                  VALUES
+                  (:loc, :tipo, :email, NOW(), NOW(),
+                   :hotel, :fentrada, :hentrada, :vuelo_entrada,
+                   :fsalida, :hsalida, :hrecogida,
+                   :viajeros, :vehiculo, :admin, :origen_vuelo_entrada)";
 
-    // Si el usuario no rellena fecha_vuelo_salida, le asignamos null
-    if (empty($data['fecha_vuelo_salida'])) {
-      $data['fecha_vuelo_salida'] = null;
-    }
-    if (empty($data['hora_vuelo_salida'])) {
-      $data['hora_vuelo_salida'] = null;
-    }
+      // Preparar todos los datos asegurando valores nulos donde corresponda
+      $params = [
+        ':loc' => $localizador,
+        ':tipo' => $data['tipo_trayecto'],
+        ':email' => $data['email_cliente'],
+        ':hotel' => $data['id_hotel'],
+        ':fentrada' => !empty($data['fecha_entrada']) ? $data['fecha_entrada'] : null,
+        ':hentrada' => !empty($data['hora_entrada']) ? $data['hora_entrada'] : null,
+        ':vuelo_entrada' => !empty($data['numero_vuelo_entrada']) ? $data['numero_vuelo_entrada'] : null,
+        ':fsalida' => !empty($data['fecha_vuelo_salida']) ? $data['fecha_vuelo_salida'] : null,
+        ':hsalida' => !empty($data['hora_vuelo_salida']) ? $data['hora_vuelo_salida'] : null,
+        ':hrecogida' => !empty($data['hora_recogida']) ? $data['hora_recogida'] : null,
+        ':viajeros' => $data['num_viajeros'],
+        ':vehiculo' => $data['id_vehiculo'],
+        ':admin' => ($rolUsuario === 'admin' ? 1 : 0),
+        ':origen_vuelo_entrada' => !empty($data['origen_vuelo_entrada']) ? $data['origen_vuelo_entrada'] : null
+      ];
 
-    if (empty($data['fecha_entrada'])) {
-      $data['fecha_entrada'] = null;
-    }
-    if (empty($data['hora_entrada'])) {
-      $data['hora_entrada'] = null;
-    }
-    if (empty($data['origen_vuelo_entrada'])) {
-      $data['origen_vuelo_entrada'] = null;
-    }
+      $stmt = $db->prepare($sql);
+      $stmt->execute($params);
 
-
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-      ':loc' => $localizador,
-      ':tipo' => $data['tipo_trayecto'],
-      ':email' => $data['email_cliente'],
-      ':hotel' => $data['id_hotel'],
-      ':fentrada' => $data['fecha_entrada'],
-      ':hentrada' => $data['hora_entrada'],
-      ':vuelo_entrada' => $data['numero_vuelo_entrada'] ?? null,
-      ':fsalida' => $data['fecha_vuelo_salida'] ?? null,
-      ':hsalida' => $data['hora_vuelo_salida'] ?? null,
-      ':hrecogida' => $data['hora_recogida'],
-      ':viajeros' => $data['num_viajeros'],
-      ':vehiculo' => $data['id_vehiculo'],
-      ':admin' => ($rolUsuario === 'admin' ? 1 : 0),
-      ':origen_vuelo_entrada' => $data['origen_vuelo_entrada']
-    ]);
-
-    // (Opcional) Enviar email con mail(...)
-    return true;
+      return true;
+    } catch (\PDOException $e) {
+      // Devolver mensaje de error detallado
+      return "Error al crear reserva: " . $e->getMessage();
+    }
   }
 
   public static function updateReserva($data, $oldReserva, $rolUsuario)
@@ -194,7 +182,7 @@ class Reserva
     $condicion = $esAdmin ? "" : "AND r.email_cliente = :email";
     $sql = "SELECT r.*,
                 v.Descripción as vehiculo,
-                h.usuario as hotel
+                h.Usuario as hotel
                 FROM transfer_reservas r
                 JOIN transfer_vehiculo v ON r.id_vehiculo = v.id_vehiculo
                 LEFT JOIN transfer_hotel h ON r.id_hotel = h.id_hotel
@@ -232,7 +220,7 @@ class Reserva
     }
 
     $sql = "SELECT r.*,
-                       h.descripcion as hotel_nombre,
+                       h.Usuario as hotel_nombre,
                        v.Descripción as vehiculo_descripcion,
                        tr.Descripción as tipo_reserva_descripcion
                 FROM transfer_reservas r

@@ -17,6 +17,12 @@ class Usuario
 
   public static function create($data)
   {
+    // Verificar si ya existe un usuario con este email
+    $existeEmail = self::findByEmail($data['email']);
+    if ($existeEmail) {
+      return "Error: Ya existe un usuario registrado con el email " . $data['email'];
+    }
+    
     $db = Database::getConnection();
     $sql = "INSERT INTO transfer_viajeros
                 (nombre, apellido1, apellido2, direccion, codigoPostal,
