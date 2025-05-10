@@ -97,7 +97,7 @@ class AdminController extends Controller
       'apellido1' => $request->apellido1,
       'apellido2' => $request->apellido2,
       'email' => $request->email,
-      'password' => bcrypt($request->password),
+      'password' => Hash::make($request->password),
       'rol' => $request->rol,
       'id_hotel' => $request->rol === 'corporativo' ? $request->id_hotel : null,
     ]);
@@ -154,7 +154,7 @@ class AdminController extends Controller
       'descripcion' => 'required|string|max:100',
       'Comision' => 'required|numeric',
       'Usuario' => 'required|string|max:100',
-      'password' => 'nullable|string|min:6',
+      'password' => 'required|string|min:6',
     ]);
 
     try {
@@ -226,16 +226,18 @@ class AdminController extends Controller
   {
     $request->validate([
       'Descripción' => 'required|string|max:100',
-      'Capacidad' => 'required|numeric|min:1',
+      'email_conductor' => 'required|email|max:100',
+      'password' => 'required|string|min:6',
     ]);
 
     try {
       Vehiculo::create([
         'Descripción' => $request->Descripción,
-        'Capacidad' => $request->Capacidad,
+        'email_conductor' => $request->email_conductor,
+        'password' => Hash::make($request->password),
       ]);
 
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -255,17 +257,21 @@ class AdminController extends Controller
   {
     $request->validate([
       'Descripción' => 'required|string|max:100',
-      'Capacidad' => 'required|numeric|min:1',
+      'email_conductor' => 'required|email|max:100',
+      'password' => 'required|string|min:100',
     ]);
 
     try {
       $vehiculo = Vehiculo::findOrFail($id);
 
       $vehiculo->Descripción = $request->Descripción;
-      $vehiculo->Capacidad = $request->Capacidad;
+      $vehiculo->email_conductor = $request->email_conductor;
+      if ($request->filled('password')) {
+        $vehiculo->password = Hash::make($request->password);
+      }
       $vehiculo->save();
 
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
