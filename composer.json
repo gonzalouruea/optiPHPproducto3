@@ -1,11 +1,11 @@
 {
-  "name": "producto3Laravel",
+  "name": "gonzalouruea/optiphp",
   "description": "A Laravel project for managing products.",
   "type": "project",
   "require": {
     "php": "^8.1|^8.2",
     "fideloper/proxy": "^4.4",
-    "fruitcake/laravel-cors": "^2.0",
+    "fruitcake/laravel-cors": "^3.0",
     "laravel/framework": "^11.0",
     "laravel/tinker": "^2.7"
   },
