@@ -116,11 +116,17 @@ npm run dev
 # Generar la clave de la aplicación
 php artisan key:generate
 
-# Ejecutar las migraciones
-php artisan migrate
 ```
 
 ---
 
-Con este formato, el archivo `README.md` es más claro y fácil de seguir para cualquier desarrollador que colabore en el proyecto. Si necesitas más ajustes, házmelo saber. 🚀
+# Inicializar base de datos
+
+como ya existia la base de datos del proyecot anterior vamos a borrar las tablas para que la migración las cree automaticamente, en el php admin borrar todas las tablas de la base de datos viajes.
+
+Luego de borrar se ejecuta el artisan migrate para que las inicialice:
+
+docker-compose exec -it web bash
+/var/www/html> php artisan migrate
+
 
