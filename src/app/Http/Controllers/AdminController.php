@@ -131,7 +131,7 @@ class AdminController extends Controller
         'password' => Hash::make($request->password),
       ]);
 
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -154,7 +154,7 @@ class AdminController extends Controller
       'descripcion' => 'required|string|max:100',
       'Comision' => 'required|numeric',
       'Usuario' => 'required|string|max:100',
-      'password' => 'required|string|min:6',
+      'password' => 'nullable|string|min:6',
     ]);
 
     try {
@@ -171,7 +171,7 @@ class AdminController extends Controller
 
       $hotel->save();
 
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -258,7 +258,7 @@ class AdminController extends Controller
     $request->validate([
       'Descripción' => 'required|string|max:100',
       'email_conductor' => 'required|email|max:100',
-      'password' => 'required|string|min:100',
+      'password' => 'nullable|string|min:100',
     ]);
 
     try {
