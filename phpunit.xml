@@ -1,0 +1,27 @@
+<phpunit>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_DRIVER" value="sync"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>./tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Unit">
+            <directory>./tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./app</directory>
+        </whitelist>
+    </filter>
+
+    <listeners>
+        <listener class="PHPUnit\TextUI\ResultPrinter"/>
+    </listeners>
+</phpunit>
