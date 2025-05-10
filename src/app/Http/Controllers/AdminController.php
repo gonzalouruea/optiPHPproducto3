@@ -403,8 +403,8 @@ class AdminController extends Controller
   public function gestionarTipos()
   {
     // Obtener tipos con conteo de reservas asociadas
-    $tipos = TipoReserva::withCount('reservas')->get();
-    return view('admin.gestionar_tipos', compact('tipos'));
+    $tiposReserva = TipoReserva::withCount('reservas')->get();
+    return view('admin.gestionar_tipos_reserva', compact('tiposReserva'));
   }
 
   /**
@@ -424,7 +424,7 @@ class AdminController extends Controller
         'Descripción' => $request->Descripción,
       ]);
 
-      return redirect()->route('admin.tipos')
+      return redirect()->route('admin.tipos-reserva.index')
         ->with('success', 'Tipo de reserva creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -452,7 +452,7 @@ class AdminController extends Controller
       $tipo->Descripción = $request->Descripción;
       $tipo->save();
 
-      return redirect()->route('admin.tipos')
+      return redirect()->route('admin.tipos-reserva.index')
         ->with('success', 'Tipo de reserva actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
