@@ -18,7 +18,7 @@
     <div class="card-body">
         <form action="{{ route('reservas.store') }}" method="POST">
             @csrf
-            
+
             @if(Auth::user()->esAdmin())
                 <div class="row mb-3">
                     <div class="col-md-9">
@@ -42,7 +42,7 @@
                     </div>
                 </div>
             @endif
-            
+
             <!-- Tipo Trayecto -->
             <div class="mb-3">
                 <label class="form-label">Tipo de Trayecto</label>
@@ -60,8 +60,31 @@
             </div>
 
             <div class="mb-3">
+    <label class="form-label">Tipo de trayecto</label>
+    <select name="id_tipo_reserva" class="form-select" required>
+        @foreach($tiposReserva as $tipo)
+            <option value="{{ $tipo->id_tipo_reserva }}">{{ $tipo->Descripción }}</option>
+        @endforeach
+    </select>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Fecha / Hora Recogida en HOTEL</label>
+        <input type="date"  name="fecha_hotel"  class="form-control">
+        <input type="time"  name="hora_hotel"   class="form-control mt-1">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Fecha / Hora Vuelo</label>
+        <input type="date"  name="fecha_vuelo"  class="form-control">
+        <input type="time"  name="hora_vuelo"   class="form-control mt-1">
+    </div>
+</div>
+
+
+            <div class="mb-3">
                 <label class="form-label">Número de Pasajeros</label>
-                <input type="number" name="num_viajeros" class="form-control @error('num_viajeros') is-invalid @enderror" 
+                <input type="number" name="num_viajeros" class="form-control @error('num_viajeros') is-invalid @enderror"
                        value="{{ old('num_viajeros') }}" required min="1">
                 @error('num_viajeros')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -83,20 +106,6 @@
                 @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Hotel (destino/recogida)</label>
-                <select name="id_hotel" class="form-select @error('id_hotel') is-invalid @enderror" required>
-                    <option value="">Seleccionar hotel...</option>
-                    @foreach($hoteles as $hotel)
-                        <option value="{{ $hotel->id_hotel }}" {{ old('id_hotel') == $hotel->id_hotel ? 'selected' : '' }}>
-                            {{ $hotel->Usuario }} ({{ $hotel->descripcion }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_hotel')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
 
             <!-- Llegada -->
             <div id="camposLlegada" class="hidden-section mb-4">
@@ -104,7 +113,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Fecha Llegada</label>
-                        <input type="date" name="fecha_entrada" class="form-control @error('fecha_entrada') is-invalid @enderror" 
+                        <input type="date" name="fecha_entrada" class="form-control @error('fecha_entrada') is-invalid @enderror"
                                value="{{ old('fecha_entrada') }}">
                         @error('fecha_entrada')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -112,7 +121,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Hora Llegada</label>
-                        <input type="time" name="hora_entrada" class="form-control @error('hora_entrada') is-invalid @enderror" 
+                        <input type="time" name="hora_entrada" class="form-control @error('hora_entrada') is-invalid @enderror"
                                value="{{ old('hora_entrada') }}">
                         @error('hora_entrada')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -120,7 +129,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Número Vuelo (Llegada)</label>
-                        <input type="text" name="numero_vuelo_entrada" class="form-control @error('numero_vuelo_entrada') is-invalid @enderror" 
+                        <input type="text" name="numero_vuelo_entrada" class="form-control @error('numero_vuelo_entrada') is-invalid @enderror"
                                value="{{ old('numero_vuelo_entrada') }}">
                         @error('numero_vuelo_entrada')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -128,7 +137,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Aeropuerto de Origen</label>
-                        <input type="text" name="origen_vuelo_entrada" class="form-control @error('origen_vuelo_entrada') is-invalid @enderror" 
+                        <input type="text" name="origen_vuelo_entrada" class="form-control @error('origen_vuelo_entrada') is-invalid @enderror"
                                value="{{ old('origen_vuelo_entrada') }}">
                         @error('origen_vuelo_entrada')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -143,7 +152,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Fecha Vuelo Salida</label>
-                        <input type="date" name="fecha_vuelo_salida" class="form-control @error('fecha_vuelo_salida') is-invalid @enderror" 
+                        <input type="date" name="fecha_vuelo_salida" class="form-control @error('fecha_vuelo_salida') is-invalid @enderror"
                                value="{{ old('fecha_vuelo_salida') }}">
                         @error('fecha_vuelo_salida')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -151,7 +160,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Hora Vuelo Salida</label>
-                        <input type="time" name="hora_vuelo_salida" class="form-control @error('hora_vuelo_salida') is-invalid @enderror" 
+                        <input type="time" name="hora_vuelo_salida" class="form-control @error('hora_vuelo_salida') is-invalid @enderror"
                                value="{{ old('hora_vuelo_salida') }}">
                         @error('hora_vuelo_salida')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -159,7 +168,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Hora de Recogida</label>
-                        <input type="time" name="hora_recogida" class="form-control @error('hora_recogida') is-invalid @enderror" 
+                        <input type="time" name="hora_recogida" class="form-control @error('hora_recogida') is-invalid @enderror"
                                value="{{ old('hora_recogida') }}">
                         @error('hora_recogida')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -191,17 +200,17 @@
         // Función para actualizar la visibilidad de los campos
         function actualizarCampos() {
             const tipo = tipoSelect.value;
-            
+
             // Si es tipo 1 (Aeropuerto → Hotel) o 3 (Ida y Vuelta) => mostrar Llegada
             camposLlegada.style.display = (tipo === '1' || tipo === '3') ? 'block' : 'none';
-            
+
             // Si es tipo 2 (Hotel → Aeropuerto) o 3 (Ida y Vuelta) => mostrar Salida
             camposSalida.style.display = (tipo === '2' || tipo === '3') ? 'block' : 'none';
         }
 
         // Asignar evento change
         tipoSelect.addEventListener('change', actualizarCampos);
-        
+
         // Ejecutar al cargar la página para manejar valores preseleccionados
         actualizarCampos();
     });
