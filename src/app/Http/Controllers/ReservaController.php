@@ -102,7 +102,7 @@ class ReservaController extends Controller
   private function autorizar(Reserva $reserva)
   {
     if ($reserva->id_hotel !== Auth::user()->id_hotel) {
-      abort(403);
+      abort(403, 'Entra por aqui');
     }
   }
 

@@ -5,9 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: arreglo_proyecto_web
+    container_name: lara_proyecto_web
     ports:
-      - "8082:80"
+      - "8085:80"
     volumes:
       - ./src:/var/www/html
     depends_on:
@@ -19,9 +19,9 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: arreglo_proyecto_mysql
+    container_name: lara_proyecto_mysql
     ports:
-      - "3307:3306"
+      - "3309:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: viajes
@@ -39,7 +39,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.1
-    container_name: arreglo_proyecto_phpmyadmin
+    container_name: lara_proyecto_phpmyadmin
     depends_on:
       - db
     ports:

@@ -198,7 +198,7 @@ class AdminController extends Controller
       }
 
       $hotel->delete();
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel eliminado con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar hotel: ' . $e->getMessage());
@@ -298,7 +298,7 @@ class AdminController extends Controller
       }
 
       $vehiculo->delete();
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo eliminado con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar vehículo: ' . $e->getMessage());
@@ -388,7 +388,7 @@ class AdminController extends Controller
       }
 
       $zona->delete();
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona eliminada con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar zona: ' . $e->getMessage());
