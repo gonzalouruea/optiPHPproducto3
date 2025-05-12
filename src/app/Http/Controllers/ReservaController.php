@@ -24,6 +24,7 @@ class ReservaController extends Controller
 
             abort(403, 'Acceso no autorizado');
         });
+      }
 
   /** Lista de reservas del hotel */
   public function index()
@@ -35,19 +36,6 @@ class ReservaController extends Controller
       ->get();
 
     return view('reservas.index', compact('reservas'));
-  }
-
-  public function create()
-  {
-    $vehiculos = Vehiculo::all();
-    $tiposReserva = TipoReserva::all();
-
-    /* solo si el que entra es admin */
-    $usuarios = Auth::user()->rol === 'admin'
-      ? Viajero::select('id_viajero', 'email')->get()
-      : collect();   // colección vacía para no-admins
-
-    return view('reservas.create', compact('vehiculos', 'tiposReserva', 'usuarios'));
   }
 
   public function calendario()
