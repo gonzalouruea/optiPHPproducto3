@@ -14,13 +14,17 @@ use App\Models\Precio; // tabla de tarifas por zona/vehículo
 
 class ReservaController extends Controller
 {
-  public function __construct()
-  {
-    /*  Todas las rutas del controlador requieren login  */
-    $this->middleware('auth');
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            // Permite el acceso a los usuarios con roles 'admin', 'corporativo' o 'usuario'
+            if (Auth::check() && in_array(Auth::user()->rol, ['admin', 'corporativo', 'usuario'])) {
+                return $next($request);
+            }
 
-
-  }
+            abort(403, 'Acceso no autorizado');
+        });
+      }
 
   /** Lista de reservas del hotel */
   public function index()
