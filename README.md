@@ -130,3 +130,7 @@ docker-compose exec -it web bash
 /var/www/html> php artisan migrate
 
 
+# Como ejecutar el servicio RESTFul
+
+GET /api/reservas/zonas
+
