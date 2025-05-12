@@ -19,68 +19,21 @@
         <form action="{{ route('reservas.store') }}" method="POST">
             @csrf
 
-            @if(Auth::user()->esAdmin())
-                <div class="row mb-3">
-                    <div class="col-md-9">
-                        <label class="form-label">Usuario</label>
-                        <select class="form-select @error('id_viajero') is-invalid @enderror" name="id_viajero">
-                            <option value="">Seleccionar usuario...</option>
-                            @foreach($usuarios as $usuario)
-                                <option value="{{ $usuario->id_viajero }}" {{ old('id_viajero') == $usuario->id_viajero ? 'selected' : '' }}>
-                                    {{ $usuario->email }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('id_viajero')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <a href="{{ route('register') }}" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-user-plus"></i> Registrar Nuevo Usuario
-                        </a>
-                    </div>
-                </div>
-            @endif
-
             <!-- Tipo Trayecto -->
             <div class="mb-3">
                 <label class="form-label">Tipo de Trayecto</label>
-                <select class="form-select @error('tipo_trayecto') is-invalid @enderror" name="tipo_trayecto" id="tipoTrayecto" required>
+                <select class="form-select @error('id_tipo_reserva') is-invalid @enderror" name="id_tipo_reserva" id="tipoTrayecto" required>
                     <option value="">Elige tipo...</option>
                     @foreach($tiposReserva as $tipo)
-                        <option value="{{ $tipo->id_tipo_reserva }}" {{ old('tipo_trayecto') == $tipo->id_tipo_reserva ? 'selected' : '' }}>
+                        <option value="{{ $tipo->id_tipo_reserva }}" {{ old('id_tipo_reserva') == $tipo->id_tipo_reserva ? 'selected' : '' }}>
                             {{ $tipo->Descripción }}
                         </option>
                     @endforeach
                 </select>
-                @error('tipo_trayecto')
+                @error('id_tipo_reserva')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-
-            <div class="mb-3">
-    <label class="form-label">Tipo de trayecto</label>
-    <select name="id_tipo_reserva" class="form-select" required>
-        @foreach($tiposReserva as $tipo)
-            <option value="{{ $tipo->id_tipo_reserva }}">{{ $tipo->Descripción }}</option>
-        @endforeach
-    </select>
-</div>
-
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Fecha / Hora Recogida en HOTEL</label>
-        <input type="date"  name="fecha_hotel"  class="form-control">
-        <input type="time"  name="hora_hotel"   class="form-control mt-1">
-    </div>
-    <div class="col-md-6 mb-3">
-        <label class="form-label">Fecha / Hora Vuelo</label>
-        <input type="date"  name="fecha_vuelo"  class="form-control">
-        <input type="time"  name="hora_vuelo"   class="form-control mt-1">
-    </div>
-</div>
-
 
             <div class="mb-3">
                 <label class="form-label">Número de Pasajeros</label>
@@ -106,7 +59,6 @@
                 @enderror
             </div>
 
-
             <!-- Llegada -->
             <div id="camposLlegada" class="hidden-section mb-4">
                 <h5 class="border-bottom pb-2 mb-3">Datos de Llegada</h5>
@@ -128,7 +80,7 @@
                         @enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Número Vuelo (Llegada)</label>
+                        <label class="form-label">Número Vuelo</label>
                         <input type="text" name="numero_vuelo_entrada" class="form-control @error('numero_vuelo_entrada') is-invalid @enderror"
                                value="{{ old('numero_vuelo_entrada') }}">
                         @error('numero_vuelo_entrada')
