@@ -134,3 +134,6 @@ docker-compose exec -it web bash
 
 GET /api/reservas/zonas
 
+ejemplo: http://localhost:8085/api/reservas/zonas
+
+
