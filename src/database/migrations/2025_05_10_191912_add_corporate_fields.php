@@ -32,11 +32,12 @@ return new class extends Migration {
 
     /* --------- 3. comisión calculada en RESERVAS --------- */
     Schema::table('transfer_reservas', function (Blueprint $t) {
-      if (!Schema::hasColumn('transfer_reservas', 'comision_hotel')) {
-        $t->decimal('comision_hotel', 8, 2)->nullable()
-          ->after('precio');   // cambia “precio” si tu columna se llama distinto
+      if (!Schema::hasColumn('transfer_reservas', 'precio')) {
+        $t->decimal('precio', 8, 2)->nullable();
+        $t->decimal('comision_hotel', 8, 2)->nullable();
       }
     });
+
   }
 
   public function down(): void
