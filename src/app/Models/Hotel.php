@@ -36,7 +36,7 @@ class Hotel extends Model
    *
    * @var array<int, string>
    */
-  protected $fillable = ['descripcion', 'id_zona', 'Comision', 'Usuario', 'password'];
+  protected $fillable = ['descripcion', 'id_zona', 'comision', 'Usuario', 'password'];
 
 
   /**

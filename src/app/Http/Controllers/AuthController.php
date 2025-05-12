@@ -111,13 +111,8 @@ class AuthController extends Controller
       'email' => ['required', 'string', 'email', 'max:100', 'unique:transfer_viajeros,email'],
       'password' => ['required', 'string', 'min:8'],
       'rol' => ['sometimes', 'string', Rule::in(['admin', 'usuario', 'corporativo'])],
-
-      // ➡️ validamos ZONA y COMISIÓN **solo** si es admin creando un corporativo
       'id_zona' => ['required_if:rol,corporativo', 'exists:transfer_zona,id_zona'],
       'comision' => ['required_if:rol,corporativo', 'numeric', 'min:0'],
- 
-
-
     ]);
 
     // 2) Extraemos los datos
@@ -139,34 +134,35 @@ class AuthController extends Controller
     $data['codigoPostal'] = $data['codPostal'];
     $data['password'] = Hash::make($data['password']);
 
- DB::transaction(function() use (&$viajero, $data) {
+    try {
+      DB::transaction(function () use (&$viajero, $data) {
         // 2) Si es corporativo, creamos primero el Hotel
         if ($data['rol'] === 'corporativo') {
-            $hotel = Hotel::create([
-                'id_zona'     => $data['id_zona'],
-                'descripcion' => $data['nombre'] . ' (Hotel)',
-                'comision'    => $data['comision'],
-                'Usuario'     => $data['email'],
-                'password'    => $data['password'], // ya está hasheado arriba
-            ]);
-            // guardamos para el viajero
-            $data['id_hotel'] = $hotel->id_hotel;
+          $hotel = Hotel::create([
+            'id_zona' => $data['id_zona'],
+            'descripcion' => $data['nombre'] . ' (Hotel)',
+            'comision' => $data['comision'],
+            'Usuario' => $data['email'],
+            'password' => $data['password'], // ya está hasheado arriba
+          ]);
+          // guardamos para el viajero
+          $data['id_hotel'] = $hotel->id_hotel;
         }
 
         // 3) Creamos el Viajero (con id_hotel si tocaba)
         $viajero = Viajero::create($data);
-    });
+      });
 
-    // 4) Redirigimos con éxito
-    return redirect()->route('login')
+      // 4) Redirigimos con éxito
+      return redirect()->route('login')
         ->with('success', 'Usuario creado con éxito. Ahora inicia sesión.');
-
-} catch (\Exception $e) {
-    // 5) Rollback automático y mostramos error
-    return back()
+    } catch (\Exception $e) {
+      // 5) Rollback automático y mostramos error
+      return back()
         ->withErrors(['email' => 'Error al crear usuario: ' . $e->getMessage()])
         ->withInput($request->except('password'));
-}
+    }
+  }
 
 
   /**

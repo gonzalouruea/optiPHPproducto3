@@ -94,7 +94,6 @@ class AdminController extends Controller
       'comision' => 'required_if:rol,corporativo|numeric|min:0',
     ]);
 
-
     DB::transaction(function () use ($request) {
       $hotelId = null;
 
@@ -103,33 +102,28 @@ class AdminController extends Controller
         $hotel = Hotel::create([
           'id_zona' => $request->id_zona,
           'descripcion' => $request->nombre . ' (Hotel)',
-          'Comision' => $request->comision,
+          'comision' => $request->comision,
           'Usuario' => $request->email,
           'password' => Hash::make($request->password),
         ]);
         $hotelId = $hotel->id_hotel;
       }
 
-    Viajero::create([
-      'nombre' => $request->nombre,
-      'apellido1' => $request->apellido1,
-      'apellido2' => $request->apellido2,
-      'email' => $request->email,
-      'password' => Hash::make($request->password),
-      'rol' => $request->rol,
-      'id_hotel' => $request->rol === 'corporativo' ? $request->id_hotel : null,
-    ]);
-
+      Viajero::create([
+        'nombre' => $request->nombre,
+        'apellido1' => $request->apellido1,
+        'apellido2' => $request->apellido2,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'rol' => $request->rol,
+        'id_hotel' => $request->rol === 'corporativo' ? $hotelId : null,
+      ]);
+    });
 
     return back()->with('success', 'Usuario (y hotel si corresponde) creado correctamente.');
   }
 
-  /**
-   * Crea un nuevo hotel.
-   *
-   * @param  \Illuminate\Http\Request  $request
-   * @return \Illuminate\Http\RedirectResponse
-   */
+
   public function crearHotel(Request $request)
   {
     $request->validate([
@@ -507,53 +501,53 @@ class AdminController extends Controller
 
   public function gestionarPrecios()
   {
-      $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
-      $zonas = Zona::all();
-      $vehiculos = Vehiculo::all();
-      $tiposReserva = TipoReserva::all();
+    $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
+    $zonas = Zona::all();
+    $vehiculos = Vehiculo::all();
+    $tiposReserva = TipoReserva::all();
 
-      return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
+    return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
   }
 
 
   //crear nuevo precio
-    public function crearPrecio(Request $request)
+  public function crearPrecio(Request $request)
   {
-      $request->validate([
-          'id_zona' => 'required|exists:transfer_zona,id_zona',
-          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-          'precio' => 'required|numeric|min:0',
-      ]);
+    $request->validate([
+      'id_zona' => 'required|exists:transfer_zona,id_zona',
+      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+      'precio' => 'required|numeric|min:0',
+    ]);
 
-      Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+    Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
 
-      return redirect()->back()->with('success', 'Precio creado correctamente.');
+    return redirect()->back()->with('success', 'Precio creado correctamente.');
   }
 
   // Modificar precio
-    public function actualizarPrecio(Request $request, $id)
+  public function actualizarPrecio(Request $request, $id)
   {
-      $request->validate([
-          'id_zona' => 'required|exists:transfer_zona,id_zona',
-          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-          'precio' => 'required|numeric|min:0',
-      ]);
+    $request->validate([
+      'id_zona' => 'required|exists:transfer_zona,id_zona',
+      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+      'precio' => 'required|numeric|min:0',
+    ]);
 
-      $precio = Precio::findOrFail($id);
-      $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+    $precio = Precio::findOrFail($id);
+    $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
 
-      return redirect()->back()->with('success', 'Precio actualizado correctamente.');
+    return redirect()->back()->with('success', 'Precio actualizado correctamente.');
   }
 
   //Borrar precio
-    public function eliminarPrecio($id)
+  public function eliminarPrecio($id)
   {
-      $precio = Precio::findOrFail($id);
-      $precio->delete();
+    $precio = Precio::findOrFail($id);
+    $precio->delete();
 
-      return redirect()->back()->with('success', 'Precio eliminado correctamente.');
+    return redirect()->back()->with('success', 'Precio eliminado correctamente.');
   }
 
 
