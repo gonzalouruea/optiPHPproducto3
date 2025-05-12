@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReservaController as ReservaHotelController; // alias si ya existe otro
 
+
 Route::middleware(['auth', 'corporativo'])
   ->prefix('hotel')
   ->name('hotel.')
@@ -70,11 +71,16 @@ Route::middleware('auth')->group(function () {
   |───────────────*/
   Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
 
-    /* Usuarios (admin crea normal / corporativo / admin) */
+       /* Usuarios (admin crea normal / corporativo / admin) */
     Route::prefix('usuarios')->name('usuarios.')->group(function () {
       Route::get('/', [AdminController::class, 'gestionarUsuarios'])->name('index');
       Route::post('/', [AdminController::class, 'crearUsuario'])->name('crear');
     });
+
+ 
+    
+  
+  
 
     /* Panel admin */
     Route::get('/panel', [AdminController::class, 'panel'])->name('panel');
@@ -120,6 +126,7 @@ Route::middleware('auth')->group(function () {
       Route::delete('/{id}', [AdminController::class, 'eliminarPrecio'])->name('eliminar');
     });
 
+ 
     /* Reportes */
     Route::prefix('reportes')->name('reportes.')->group(function () {
       Route::get('/reservas', [AdminController::class, 'reporteReservas'])->name('reservas');

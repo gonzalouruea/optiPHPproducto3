@@ -333,7 +333,7 @@ class AdminController extends Controller
         'descripcion' => $request->descripcion,
       ]);
 
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona creada con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -361,7 +361,7 @@ class AdminController extends Controller
       $zona->descripcion = $request->descripcion;
       $zona->save();
 
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona actualizada con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -485,4 +485,58 @@ class AdminController extends Controller
       return back()->with('error', 'Error al eliminar tipo de reserva: ' . $e->getMessage());
     }
   }
+
+
+  public function gestionarPrecios()
+  {
+      $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
+      $zonas = Zona::all();
+      $vehiculos = Vehiculo::all();
+      $tiposReserva = TipoReserva::all();
+
+      return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
+  }
+
+
+  //crear nuevo precio
+    public function crearPrecio(Request $request)
+  {
+      $request->validate([
+          'id_zona' => 'required|exists:transfer_zona,id_zona',
+          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+          'precio' => 'required|numeric|min:0',
+      ]);
+
+      Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+
+      return redirect()->back()->with('success', 'Precio creado correctamente.');
+  }
+
+  // Modificar precio
+    public function actualizarPrecio(Request $request, $id)
+  {
+      $request->validate([
+          'id_zona' => 'required|exists:transfer_zona,id_zona',
+          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+          'precio' => 'required|numeric|min:0',
+      ]);
+
+      $precio = Precio::findOrFail($id);
+      $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+
+      return redirect()->back()->with('success', 'Precio actualizado correctamente.');
+  }
+
+  //Borrar precio
+    public function eliminarPrecio($id)
+  {
+      $precio = Precio::findOrFail($id);
+      $precio->delete();
+
+      return redirect()->back()->with('success', 'Precio eliminado correctamente.');
+  }
+
+
 }
