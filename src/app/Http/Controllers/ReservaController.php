@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+use Illuminate\Support\Facades\DB;   // añade arriba
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use App\Models\Viajero;   // o User, según tu diseño
 use App\Models\Reserva;
 use App\Models\Vehiculo;
 use App\Models\TipoReserva;
@@ -15,7 +16,10 @@ class ReservaController extends Controller
 {
   public function __construct()
   {
-    $this->middleware(['auth', 'corporativo']);
+    /*  Todas las rutas del controlador requieren login  */
+    $this->middleware('auth');
+
+
   }
 
   /** Lista de reservas del hotel */
@@ -30,13 +34,49 @@ class ReservaController extends Controller
     return view('reservas.index', compact('reservas'));
   }
 
+  public function calendario()
+  {
+    $user = auth()->user();
+
+    /* ── ❷ eventos según rol ─────────────────────────────────── */
+    if ($user->rol === 'corporativo') {
+      if (!$user->id_hotel) {
+        return back()->withErrors(
+          'Tu cuenta corporativa aún no tiene hotel asignado.'
+        );
+      }
+
+      $query = Reserva::where('id_hotel', $user->id_hotel);
+    } elseif ($user->rol === 'admin') {
+      $query = Reserva::query();                // todas las reservas
+    } else {   // usuario particular
+      $query = Reserva::where('email_cliente', $user->email);
+    }
+
+    /* ── ❸ selecciona columnas reales de tu tabla ────────────── */
+    $eventos = $query->select([
+      'id_reserva  as id',
+      \DB::raw("CONCAT(localizador,' · ',num_viajeros,' pax') as title"),
+      \DB::raw("CONCAT(fecha_entrada,'T',hora_entrada) as start")
+    ])->get();
+
+    return view('reservas.calendario', [
+      'eventos' => $eventos->toJson(),
+    ]);
+  }
+
   /** formulario nueva reserva */
   public function create()
   {
-    return view('reservas.create', [
-      'vehiculos' => Vehiculo::all(),
-      'tiposReserva' => TipoReserva::all(),
-    ]);
+    $vehiculos = Vehiculo::all();
+    $tiposReserva = TipoReserva::all();
+
+    /* solo si el que entra es admin */
+    $usuarios = Auth::user()->rol === 'admin'
+      ? Viajero::select('id_viajero', 'email')->get()
+      : collect();   // colección vacía para no-admins
+
+    return view('reservas.create', compact('vehiculos', 'tiposReserva', 'usuarios'));
   }
 
   /** almacena la reserva + cálculo de comisión */

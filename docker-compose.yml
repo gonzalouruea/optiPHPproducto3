@@ -10,6 +10,7 @@ services:
       - "8085:80"
     volumes:
       - ./src:/var/www/html
+      - ./.env:/var/www/html/.env
     depends_on:
       - db
     networks:
@@ -53,6 +54,7 @@ services:
 
 volumes:
   mysql_data:
+
 
 networks:
   backend:

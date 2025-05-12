@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Reserva;
 use App\Models\Vehiculo;
-use App\Models\Hotel;
 use App\Models\Viajero;
+use App\Models\Hotel;
 use App\Models\Zona;
 use App\Models\TipoReserva;
-use App\Models\Precio;
 
 class AdminController extends Controller
 {
@@ -89,8 +89,26 @@ class AdminController extends Controller
       'email' => 'required|email|max:100|unique:transfer_viajeros,email',
       'password' => 'required|string|min:6',
       'rol' => 'required|in:usuario,corporativo,admin',
-      'id_hotel' => 'required_if:rol,corporativo|nullable|exists:transfer_hotel,id_hotel',
+      // estos solo importan si es corporativo
+      'id_zona' => 'required_if:rol,corporativo|exists:transfer_zona,id_zona',
+      'comision' => 'required_if:rol,corporativo|numeric|min:0',
     ]);
+
+
+    DB::transaction(function () use ($request) {
+      $hotelId = null;
+
+      if ($request->rol === 'corporativo') {
+        // 1) Creamos el hotel automáticamente
+        $hotel = Hotel::create([
+          'id_zona' => $request->id_zona,
+          'descripcion' => $request->nombre . ' (Hotel)',
+          'Comision' => $request->comision,
+          'Usuario' => $request->email,
+          'password' => Hash::make($request->password),
+        ]);
+        $hotelId = $hotel->id_hotel;
+      }
 
     Viajero::create([
       'nombre' => $request->nombre,
@@ -102,9 +120,9 @@ class AdminController extends Controller
       'id_hotel' => $request->rol === 'corporativo' ? $request->id_hotel : null,
     ]);
 
-    return back()->with('success', 'Usuario creado correctamente');
-  }
 
+    return back()->with('success', 'Usuario (y hotel si corresponde) creado correctamente.');
+  }
 
   /**
    * Crea un nuevo hotel.
