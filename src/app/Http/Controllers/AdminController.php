@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Reserva;
 use App\Models\Vehiculo;
-use App\Models\Hotel;
 use App\Models\Viajero;
+use App\Models\Hotel;
 use App\Models\Zona;
 use App\Models\TipoReserva;
-use App\Models\Precio;
 
 class AdminController extends Controller
 {
@@ -89,29 +89,41 @@ class AdminController extends Controller
       'email' => 'required|email|max:100|unique:transfer_viajeros,email',
       'password' => 'required|string|min:6',
       'rol' => 'required|in:usuario,corporativo,admin',
-      'id_hotel' => 'required_if:rol,corporativo|nullable|exists:transfer_hotel,id_hotel',
+      // estos solo importan si es corporativo
+      'id_zona' => 'required_if:rol,corporativo|exists:transfer_zona,id_zona',
+      'comision' => 'required_if:rol,corporativo|numeric|min:0',
     ]);
 
-    Viajero::create([
-      'nombre' => $request->nombre,
-      'apellido1' => $request->apellido1,
-      'apellido2' => $request->apellido2,
-      'email' => $request->email,
-      'password' => Hash::make($request->password),
-      'rol' => $request->rol,
-      'id_hotel' => $request->rol === 'corporativo' ? $request->id_hotel : null,
-    ]);
+    DB::transaction(function () use ($request) {
+      $hotelId = null;
 
-    return back()->with('success', 'Usuario creado correctamente');
+      if ($request->rol === 'corporativo') {
+        // 1) Creamos el hotel automáticamente
+        $hotel = Hotel::create([
+          'id_zona' => $request->id_zona,
+          'descripcion' => $request->nombre . ' (Hotel)',
+          'comision' => $request->comision,
+          'Usuario' => $request->email,
+          'password' => Hash::make($request->password),
+        ]);
+        $hotelId = $hotel->id_hotel;
+      }
+
+      Viajero::create([
+        'nombre' => $request->nombre,
+        'apellido1' => $request->apellido1,
+        'apellido2' => $request->apellido2,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'rol' => $request->rol,
+        'id_hotel' => $request->rol === 'corporativo' ? $hotelId : null,
+      ]);
+    });
+
+    return back()->with('success', 'Usuario (y hotel si corresponde) creado correctamente.');
   }
 
 
-  /**
-   * Crea un nuevo hotel.
-   *
-   * @param  \Illuminate\Http\Request  $request
-   * @return \Illuminate\Http\RedirectResponse
-   */
   public function crearHotel(Request $request)
   {
     $request->validate([
@@ -489,53 +501,53 @@ class AdminController extends Controller
 
   public function gestionarPrecios()
   {
-      $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
-      $zonas = Zona::all();
-      $vehiculos = Vehiculo::all();
-      $tiposReserva = TipoReserva::all();
+    $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
+    $zonas = Zona::all();
+    $vehiculos = Vehiculo::all();
+    $tiposReserva = TipoReserva::all();
 
-      return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
+    return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
   }
 
 
   //crear nuevo precio
-    public function crearPrecio(Request $request)
+  public function crearPrecio(Request $request)
   {
-      $request->validate([
-          'id_zona' => 'required|exists:transfer_zona,id_zona',
-          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-          'precio' => 'required|numeric|min:0',
-      ]);
+    $request->validate([
+      'id_zona' => 'required|exists:transfer_zona,id_zona',
+      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+      'precio' => 'required|numeric|min:0',
+    ]);
 
-      Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+    Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
 
-      return redirect()->back()->with('success', 'Precio creado correctamente.');
+    return redirect()->back()->with('success', 'Precio creado correctamente.');
   }
 
   // Modificar precio
-    public function actualizarPrecio(Request $request, $id)
+  public function actualizarPrecio(Request $request, $id)
   {
-      $request->validate([
-          'id_zona' => 'required|exists:transfer_zona,id_zona',
-          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-          'precio' => 'required|numeric|min:0',
-      ]);
+    $request->validate([
+      'id_zona' => 'required|exists:transfer_zona,id_zona',
+      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+      'precio' => 'required|numeric|min:0',
+    ]);
 
-      $precio = Precio::findOrFail($id);
-      $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+    $precio = Precio::findOrFail($id);
+    $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
 
-      return redirect()->back()->with('success', 'Precio actualizado correctamente.');
+    return redirect()->back()->with('success', 'Precio actualizado correctamente.');
   }
 
   //Borrar precio
-    public function eliminarPrecio($id)
+  public function eliminarPrecio($id)
   {
-      $precio = Precio::findOrFail($id);
-      $precio->delete();
+    $precio = Precio::findOrFail($id);
+    $precio->delete();
 
-      return redirect()->back()->with('success', 'Precio eliminado correctamente.');
+    return redirect()->back()->with('success', 'Precio eliminado correctamente.');
   }
 
 

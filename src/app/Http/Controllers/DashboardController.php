@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
   public function __construct()
   {
-    $this->middleware(['auth', 'corporativo']);
+    $this->middleware(['auth']);
   }
 
 
@@ -19,7 +19,9 @@ class DashboardController extends Controller
   {
     $hotelId = Auth::user()->id_hotel;
 
-    $stats = Reserva::selectRaw("
+    $stats = [];
+
+    $stats["reservas"] = Reserva::selectRaw("
     DATE_FORMAT(created_at,'%Y-%m') as mes,
     COUNT(*)                         as traslados,
     SUM(comision_hotel)              as total_comision")
@@ -28,6 +30,9 @@ class DashboardController extends Controller
       ->orderBy('mes')
       ->get();
 
+    // Estadísticas para el dashboard
+    $stats['reservas_totales'] = Reserva::count();
+    $stats['reservas_hoy'] =Reserva::whereDate('fecha_reserva', today())->count();
 
     return view('hotel.dashboard', compact('stats'));
   }
