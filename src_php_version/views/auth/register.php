@@ -4,9 +4,9 @@
   <h2>Registro de Usuario</h2>
 
   <?php if (!empty($error)): ?>
-        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
   <?php elseif (!empty($exito)): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($exito) ?></div>
+    <div class="alert alert-success"><?= htmlspecialchars($exito) ?></div>
   <?php endif; ?>
 
   <form action="index.php?controller=Auth&action=register" method="POST" class="mt-3">
@@ -24,7 +24,7 @@
     <div class="row mb-3">
       <div class="col-md-4">
         <label class="form-label">Nombre</label>
-          <input type="text" name="nombre" class="form-control" required>
+        <input type="text" name="nombre" class="form-control" required>
       </div>
       <div class="col-md-4">
         <label class="form-label">Apellido 1</label>
@@ -44,8 +44,8 @@
         <label class="form-label">Dirección</label>
         <input type="text" name="direccion" class="form-control" required>
       </div>
-  </div>
-  <div class="row mb-3">
+    </div>
+    <div class="row mb-3">
       <div class="col-md-4">
         <label class="form-label">Código Postal</label>
         <input type="text" name="codPostal" class="form-control" required>
@@ -58,14 +58,14 @@
         <label class="form-label">País</label>
         <input type="text" name="pais" class="form-control" required>
       </div>
-  </div>
-      <div class="col-md-6">
-        <label class="form-label">Contraseña</label>
-        <input type="password" name="password" class="form-control" required>
-      </div>
     </div>
-    <button class="btn btn-primary w-100 mt-3">Crear Cuenta</button>
-  </form>
+    <div class="col-md-6">
+      <label class="form-label">Contraseña</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+</div>
+<button class="btn btn-primary w-100 mt-3">Crear Cuenta</button>
+</form>
 </div>
 
 <?php include __DIR__ . '/../layout/footer.php'; ?>

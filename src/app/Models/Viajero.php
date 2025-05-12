@@ -48,6 +48,8 @@ class Viajero extends Authenticatable
     'email',
     'password',
     'rol',
+    'id_hotel',
+
   ];
 
   /**

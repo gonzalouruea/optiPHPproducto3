@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Viajero;
+use App\Models\Zona;
+use Illuminate\Support\Facades\DB;
+use App\Models\Hotel;
+use App\Models\Reserva;
+
 
 class AuthController extends Controller
 {
@@ -82,7 +87,8 @@ class AuthController extends Controller
    */
   public function showRegistrationForm()
   {
-    return view('auth.register');
+    $zonas = Zona::all();
+    return view('auth.register', compact('zonas'));
   }
 
   /**
@@ -93,6 +99,7 @@ class AuthController extends Controller
    */
   public function register(Request $request)
   {
+    // 1) Validación básica de TODOS los campos de registro
     $request->validate([
       'nombre' => ['required', 'string', 'max:100'],
       'apellido1' => ['required', 'string', 'max:100'],
@@ -104,26 +111,63 @@ class AuthController extends Controller
       'email' => ['required', 'string', 'email', 'max:100', 'unique:transfer_viajeros,email'],
       'password' => ['required', 'string', 'min:8'],
       'rol' => ['sometimes', 'string', Rule::in(['admin', 'usuario', 'corporativo'])],
+
+      // ➡️ validamos ZONA y COMISIÓN **solo** si es admin creando un corporativo
+      'id_zona' => ['required_if:rol,corporativo', 'exists:transfer_zona,id_zona'],
+      'comision' => ['required_if:rol,corporativo', 'numeric', 'min:0'],
+ 
+
+
     ]);
 
-    $data = $request->all();
+    // 2) Extraemos los datos
+    $data = $request->only([
+      'nombre',
+      'apellido1',
+      'apellido2',
+      'direccion',
+      'codPostal',
+      'ciudad',
+      'password',
+      'pais',
+      'email',
+      'rol',
+      'id_zona',
+      'comision'
+    ]);
     $data['rol'] = $data['rol'] ?? 'usuario';
-    $data['codigoPostal'] = $data['codPostal']; // Mapeo de nombres de campo
+    $data['codigoPostal'] = $data['codPostal'];
     $data['password'] = Hash::make($data['password']);
 
-    try {
-      $viajero = Viajero::create($data);
+ DB::transaction(function() use (&$viajero, $data) {
+        // 2) Si es corporativo, creamos primero el Hotel
+        if ($data['rol'] === 'corporativo') {
+            $hotel = Hotel::create([
+                'id_zona'     => $data['id_zona'],
+                'descripcion' => $data['nombre'] . ' (Hotel)',
+                'comision'    => $data['comision'],
+                'Usuario'     => $data['email'],
+                'password'    => $data['password'], // ya está hasheado arriba
+            ]);
+            // guardamos para el viajero
+            $data['id_hotel'] = $hotel->id_hotel;
+        }
 
-      // Redireccionar con mensaje de éxito
-      return redirect()->route('login')
-        ->with('success', 'El usuario ha sido creado con éxito. Ahora inicia sesión.');
-    } catch (\Exception $e) {
-      // Si hay un error (por ejemplo, email duplicado)
-      return back()->withErrors([
-        'email' => 'Error al crear usuario: ' . $e->getMessage(),
-      ])->withInput($request->except('password'));
-    }
-  }
+        // 3) Creamos el Viajero (con id_hotel si tocaba)
+        $viajero = Viajero::create($data);
+    });
+
+    // 4) Redirigimos con éxito
+    return redirect()->route('login')
+        ->with('success', 'Usuario creado con éxito. Ahora inicia sesión.');
+
+} catch (\Exception $e) {
+    // 5) Rollback automático y mostramos error
+    return back()
+        ->withErrors(['email' => 'Error al crear usuario: ' . $e->getMessage()])
+        ->withInput($request->except('password'));
+}
+
 
   /**
    * Muestra el perfil del usuario.
