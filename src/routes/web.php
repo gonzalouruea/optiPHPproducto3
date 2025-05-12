@@ -61,7 +61,13 @@ Route::middleware('auth')->group(function () {
   /* Reservas (usuarios normales) */
   Route::resource('reservas', ReservaController::class);
 
-  Route::get('/calendario', [ReservaController::class, 'calendario'])->name('reservas.calendario');
+  Route::get('/calendario', [ReservaController::class, 'calendario'])
+    ->name('reservas.calendario');   // <-- sin ->middleware('auth') porque el
+  //     grupo de arriba ya lo aplica
+
+
+
+
   Route::get('/reservas/{id}/pdf', [ReservaController::class, 'generarPdf'])->name('reservas.pdf');
   Route::post('/reservas/{id}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
 
