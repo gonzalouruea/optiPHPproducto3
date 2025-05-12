@@ -94,6 +94,7 @@ class AdminController extends Controller
       'comision' => 'required_if:rol,corporativo|numeric|min:0',
     ]);
 
+
     DB::transaction(function () use ($request) {
       $hotelId = null;
 
@@ -109,17 +110,16 @@ class AdminController extends Controller
         $hotelId = $hotel->id_hotel;
       }
 
-      // 2) Creamos el viajero/usuario y le asignamos el id_hotel
-      Viajero::create([
-        'nombre' => $request->nombre,
-        'apellido1' => $request->apellido1,
-        'apellido2' => $request->apellido2,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'rol' => $request->rol,
-        'id_hotel' => $hotelId,       // null si no es corporativo
-      ]);
-    });
+    Viajero::create([
+      'nombre' => $request->nombre,
+      'apellido1' => $request->apellido1,
+      'apellido2' => $request->apellido2,
+      'email' => $request->email,
+      'password' => Hash::make($request->password),
+      'rol' => $request->rol,
+      'id_hotel' => $request->rol === 'corporativo' ? $request->id_hotel : null,
+    ]);
+
 
     return back()->with('success', 'Usuario (y hotel si corresponde) creado correctamente.');
   }
@@ -149,7 +149,7 @@ class AdminController extends Controller
         'password' => Hash::make($request->password),
       ]);
 
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -189,7 +189,7 @@ class AdminController extends Controller
 
       $hotel->save();
 
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -216,7 +216,7 @@ class AdminController extends Controller
       }
 
       $hotel->delete();
-      return redirect()->route('admin.hoteles')
+      return redirect()->route('admin.hoteles.index')
         ->with('success', 'Hotel eliminado con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar hotel: ' . $e->getMessage());
@@ -244,16 +244,18 @@ class AdminController extends Controller
   {
     $request->validate([
       'Descripción' => 'required|string|max:100',
-      'Capacidad' => 'required|numeric|min:1',
+      'email_conductor' => 'required|email|max:100',
+      'password' => 'required|string|min:6',
     ]);
 
     try {
       Vehiculo::create([
         'Descripción' => $request->Descripción,
-        'Capacidad' => $request->Capacidad,
+        'email_conductor' => $request->email_conductor,
+        'password' => Hash::make($request->password),
       ]);
 
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -273,17 +275,21 @@ class AdminController extends Controller
   {
     $request->validate([
       'Descripción' => 'required|string|max:100',
-      'Capacidad' => 'required|numeric|min:1',
+      'email_conductor' => 'required|email|max:100',
+      'password' => 'nullable|string|min:100',
     ]);
 
     try {
       $vehiculo = Vehiculo::findOrFail($id);
 
       $vehiculo->Descripción = $request->Descripción;
-      $vehiculo->Capacidad = $request->Capacidad;
+      $vehiculo->email_conductor = $request->email_conductor;
+      if ($request->filled('password')) {
+        $vehiculo->password = Hash::make($request->password);
+      }
       $vehiculo->save();
 
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -310,7 +316,7 @@ class AdminController extends Controller
       }
 
       $vehiculo->delete();
-      return redirect()->route('admin.vehiculos')
+      return redirect()->route('admin.vehiculos.index')
         ->with('success', 'Vehículo eliminado con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar vehículo: ' . $e->getMessage());
@@ -345,7 +351,7 @@ class AdminController extends Controller
         'descripcion' => $request->descripcion,
       ]);
 
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona creada con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -373,7 +379,7 @@ class AdminController extends Controller
       $zona->descripcion = $request->descripcion;
       $zona->save();
 
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona actualizada con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -400,7 +406,7 @@ class AdminController extends Controller
       }
 
       $zona->delete();
-      return redirect()->route('admin.zonas')
+      return redirect()->route('admin.zonas.index')
         ->with('success', 'Zona eliminada con éxito');
     } catch (\Exception $e) {
       return back()->with('error', 'Error al eliminar zona: ' . $e->getMessage());
@@ -415,8 +421,8 @@ class AdminController extends Controller
   public function gestionarTipos()
   {
     // Obtener tipos con conteo de reservas asociadas
-    $tipos = TipoReserva::withCount('reservas')->get();
-    return view('admin.gestionar_tipos', compact('tipos'));
+    $tiposReserva = TipoReserva::withCount('reservas')->get();
+    return view('admin.gestionar_tipos_reserva', compact('tiposReserva'));
   }
 
   /**
@@ -436,7 +442,7 @@ class AdminController extends Controller
         'Descripción' => $request->Descripción,
       ]);
 
-      return redirect()->route('admin.tipos')
+      return redirect()->route('admin.tipos-reserva.index')
         ->with('success', 'Tipo de reserva creado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -464,7 +470,7 @@ class AdminController extends Controller
       $tipo->Descripción = $request->Descripción;
       $tipo->save();
 
-      return redirect()->route('admin.tipos')
+      return redirect()->route('admin.tipos-reserva.index')
         ->with('success', 'Tipo de reserva actualizado con éxito');
     } catch (\Exception $e) {
       return back()->withErrors([
@@ -497,4 +503,58 @@ class AdminController extends Controller
       return back()->with('error', 'Error al eliminar tipo de reserva: ' . $e->getMessage());
     }
   }
+
+
+  public function gestionarPrecios()
+  {
+      $precios = Precio::with(['zona', 'vehiculo', 'tipoReserva'])->get();
+      $zonas = Zona::all();
+      $vehiculos = Vehiculo::all();
+      $tiposReserva = TipoReserva::all();
+
+      return view('admin.gestionar_precios', compact('precios', 'zonas', 'vehiculos', 'tiposReserva'));
+  }
+
+
+  //crear nuevo precio
+    public function crearPrecio(Request $request)
+  {
+      $request->validate([
+          'id_zona' => 'required|exists:transfer_zona,id_zona',
+          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+          'precio' => 'required|numeric|min:0',
+      ]);
+
+      Precio::create($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+
+      return redirect()->back()->with('success', 'Precio creado correctamente.');
+  }
+
+  // Modificar precio
+    public function actualizarPrecio(Request $request, $id)
+  {
+      $request->validate([
+          'id_zona' => 'required|exists:transfer_zona,id_zona',
+          'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+          'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+          'precio' => 'required|numeric|min:0',
+      ]);
+
+      $precio = Precio::findOrFail($id);
+      $precio->update($request->only(['id_zona', 'id_vehiculo', 'id_tipo_reserva', 'precio']));
+
+      return redirect()->back()->with('success', 'Precio actualizado correctamente.');
+  }
+
+  //Borrar precio
+    public function eliminarPrecio($id)
+  {
+      $precio = Precio::findOrFail($id);
+      $precio->delete();
+
+      return redirect()->back()->with('success', 'Precio eliminado correctamente.');
+  }
+
+
 }

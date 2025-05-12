@@ -57,10 +57,20 @@
                                                     <input type="text" class="form-control" id="Descripción{{ $vehiculo->id_vehiculo }}" 
                                                            name="Descripción" value="{{ $vehiculo->Descripción }}" required>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                                                <div class="mb-3">
+                                                        <label for="email_conductor{{ $vehiculo->email_conductor }}" class="form-label">Email</label>
+                                                        <input type="text" class="form-control" id="email_conductor{{ $vehiculo->email_conductor }}" 
+                                                            name="email_conductor" value="{{ $vehiculo->email_conductor }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="password{{ $vehiculo->password }}" class="form-label">Password (Dejar en blanco para no cambiar)</label>
+                                                    <input type="password" class="form-control" id="password{{ $vehiculo->password }}" 
+                                                            name="password" value="" >
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                                                </div>
                                             </div>
                                         </form>
                                     </div>
@@ -113,6 +123,14 @@
                         <label for="Descripción" class="form-label">Descripción</label>
                         <input type="text" class="form-control" id="Descripción" name="Descripción" required>
                         <div class="form-text">Ejemplo: Sedan, SUV, Minivan, etc.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_conductor" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email_conductor" name="email_conductor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                 </div>
                 <div class="modal-footer">

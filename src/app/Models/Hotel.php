@@ -36,7 +36,7 @@ class Hotel extends Model
    *
    * @var array<int, string>
    */
-  protected $fillable = ['descripcion', 'id_zona', 'comision', 'Usuario', 'password'];
+  protected $fillable = ['descripcion', 'id_zona', 'Comision', 'Usuario', 'password'];
 
 
   /**
@@ -48,9 +48,9 @@ class Hotel extends Model
     'password',
   ];
 
-  public function getComisionAttribute()   // accessor → $hotel->comision siempre decimal
+  public function getComisionAttribute()   // accessor → $hotel->Comision siempre decimal
   {
-    return $this->attributes['comision'];
+    return $this->attributes['Comision'];
   }
 
   /**

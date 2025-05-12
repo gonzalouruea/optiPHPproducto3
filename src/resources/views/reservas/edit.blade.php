@@ -50,7 +50,7 @@
                     @foreach($vehiculos as $vehiculo)
                         <option value="{{ $vehiculo->id_vehiculo }}" 
                             {{ old('id_vehiculo', $reserva->id_vehiculo) == $vehiculo->id_vehiculo ? 'selected' : '' }}>
-                            {{ $vehiculo->Descripción }} (Capacidad: {{ $vehiculo->Capacidad }})
+                            {{ $vehiculo->Descripción }} 
                         </option>
                     @endforeach
                 </select>

@@ -82,7 +82,7 @@
           </div>
           <div class="mb-3">
             <label>Comisión (%)</label>
-            <input type="number" name="comision" step="0.01" class="form-control" required>
+            <input type="number" name="Comision" step="0.01" class="form-control" required>
           </div>
           <button class="btn btn-primary">Crear</button>
         </form>
@@ -127,7 +127,7 @@
           </div>
           <div class="mb-3">
             <label>Comisión (%)</label>
-            <input type="number" name="comision" step="0.01" id="edit_comision" class="form-control" required>
+            <input type="number" name="Comision" step="0.01" id="edit_comision" class="form-control" required>
           </div>
           <button class="btn btn-primary">Guardar</button>
         </form>

@@ -37,7 +37,8 @@ class Vehiculo extends Model
      */
     protected $fillable = [
         'Descripción',
-        'Capacidad',
+        'email_conductor',
+        'password'
     ];
 
     /**

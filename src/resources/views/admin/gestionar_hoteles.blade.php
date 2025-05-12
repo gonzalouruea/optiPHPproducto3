@@ -62,7 +62,7 @@
                                                            name="Usuario" value="{{ $hotel->Usuario }}" required>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label for="descripcion{{ $hotel->id_hotel }}" class="form-label">Descripción</label>
+                                                    <label for="descripcion{{ $hotel->id_hotel }}" class="form-label">Descripcion</label>
                                                     <input type="text" class="form-control" id="descripcion{{ $hotel->id_hotel }}" 
                                                            name="descripcion" value="{{ $hotel->descripcion }}" required>
                                                 </div>
