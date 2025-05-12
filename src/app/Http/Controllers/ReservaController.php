@@ -24,6 +24,7 @@ class ReservaController extends Controller
 
             abort(403, 'Acceso no autorizado');
         });
+      }
 
   /** Lista de reservas del hotel */
   public function index()
