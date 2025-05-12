@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Models\Viajero;
+use App\Models\Hotel;
 
 class AuthController extends Controller
 {
@@ -91,39 +92,54 @@ class AuthController extends Controller
    * @param  \Illuminate\Http\Request  $request
    * @return \Illuminate\Http\RedirectResponse
    */
-  public function register(Request $request)
-  {
+ 
+
+public function register(Request $request)
+{
     $request->validate([
-      'nombre' => ['required', 'string', 'max:100'],
-      'apellido1' => ['required', 'string', 'max:100'],
-      'apellido2' => ['required', 'string', 'max:100'],
-      'direccion' => ['required', 'string', 'max:100'],
-      'codPostal' => ['required', 'string', 'max:100'],
-      'ciudad' => ['required', 'string', 'max:100'],
-      'pais' => ['required', 'string', 'max:100'],
-      'email' => ['required', 'string', 'email', 'max:100', 'unique:transfer_viajeros,email'],
-      'password' => ['required', 'string', 'min:8'],
-      'rol' => ['sometimes', 'string', Rule::in(['admin', 'usuario', 'corporativo'])],
+        'nombre' => ['required', 'string', 'max:100'],
+        'apellido1' => ['required', 'string', 'max:100'],
+        'apellido2' => ['required', 'string', 'max:100'],
+        'direccion' => ['required', 'string', 'max:100'],
+        'codPostal' => ['required', 'string', 'max:100'],
+        'ciudad' => ['required', 'string', 'max:100'],
+        'pais' => ['required', 'string', 'max:100'],
+        'email' => ['required', 'string', 'email', 'max:100', 'unique:transfer_viajeros,email'],
+        'password' => ['required', 'string', 'min:8'],
+        'rol' => ['sometimes', 'string', Rule::in(['admin', 'usuario', 'corporativo'])],
     ]);
 
     $data = $request->all();
     $data['rol'] = $data['rol'] ?? 'usuario';
-    $data['codigoPostal'] = $data['codPostal']; // Mapeo de nombres de campo
+    $data['codigoPostal'] = $data['codPostal'];
     $data['password'] = Hash::make($data['password']);
 
     try {
-      $viajero = Viajero::create($data);
+        $viajero = Viajero::create($data);
 
-      // Redireccionar con mensaje de éxito
-      return redirect()->route('login')
-        ->with('success', 'El usuario ha sido creado con éxito. Ahora inicia sesión.');
+        // Si es corporativo, crea el hotel
+        if ($viajero->rol === 'corporativo') {
+            $hotel = Hotel::create([
+                'descripcion' => $viajero->nombre . ' Hotel',
+                'id_zona' => 1, // ← Puedes ajustar esto o usar un dropdown en el formulario
+                'Comision' => 10, // Valor por defecto, modificable luego
+                'Usuario' => $viajero->email,
+                'password' => $viajero->password,
+            ]);
+
+            // Asocia el hotel al viajero
+            $viajero->id_hotel = $hotel->id_hotel;
+            $viajero->save();
+        }
+
+        return redirect()->route('login')
+            ->with('success', 'El usuario ha sido creado con éxito. Ahora inicia sesión.');
     } catch (\Exception $e) {
-      // Si hay un error (por ejemplo, email duplicado)
-      return back()->withErrors([
-        'email' => 'Error al crear usuario: ' . $e->getMessage(),
-      ])->withInput($request->except('password'));
+        return back()->withErrors([
+            'email' => 'Error al crear usuario: ' . $e->getMessage(),
+        ])->withInput($request->except('password'));
     }
-  }
+}
 
   /**
    * Muestra el perfil del usuario.
