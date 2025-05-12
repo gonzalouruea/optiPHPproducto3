@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use App\Models\Reserva;
 use App\Models\Vehiculo;
 use App\Models\TipoReserva;
-use App\Models\Precio;      // tabla de tarifas por zona/vehículo
+use App\Models\Precio; // tabla de tarifas por zona/vehículo
 
 class ReservaController extends Controller
 {
@@ -42,25 +42,28 @@ class ReservaController extends Controller
   /** almacena la reserva + cálculo de comisión */
   public function store(Request $r)
   {
+    // Validaciones de los datos del formulario
     $r->validate([
       'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
       'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
       'num_viajeros' => 'required|integer|min:1',
-      // al menos una fecha/hora
+      // Al menos una fecha/hora
       'fecha_hotel' => 'nullable|date',
       'hora_hotel' => 'nullable',
       'fecha_vuelo' => 'nullable|date',
       'hora_vuelo' => 'nullable',
     ]);
 
-    // 1. datos básicos
+    // 1. Datos básicos
     $hotel = Auth::user()->hotel;
+
+    // Asegúrate de que se pase un precio válido calculado
     $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
 
-    // 2. comisión variable según lo pactado
+    // 2. Comisión variable según lo pactado
     $comision = round($precio * $hotel->comision / 100, 2);
 
-    // 3. guardamos
+    // 3. Guardamos la reserva
     Reserva::create([
       'localizador' => Reserva::generarLocalizador(),
       'id_hotel' => $hotel->id_hotel,
@@ -74,22 +77,22 @@ class ReservaController extends Controller
       'hora_vuelo_salida' => $r->hora_vuelo,
       'num_viajeros' => $r->num_viajeros,
       'id_vehiculo' => $r->id_vehiculo,
-      'precio' => $precio,
+      'precio' => $precio, // Asegúrate de que el valor de precio siempre esté presente
       'comision_hotel' => $comision,
+      'numero_vuelo_entrada' => $r->numero_vuelo_entrada, // Incluyendo el campo de vuelo
     ]);
 
     return back()->with('success', 'Reserva creada correctamente.');
   }
 
-
-  /** muestra detalle */
+  /** Muestra detalle */
   public function show(Reserva $reserva)
   {
     $this->autorizar($reserva);
     return view('reservas.show', compact('reserva'));
   }
 
-  /** eliminar (cancelar) */
+  /** Eliminar (cancelar) */
   public function destroy(Reserva $reserva)
   {
     $this->autorizar($reserva);
@@ -108,8 +111,12 @@ class ReservaController extends Controller
 
   private function calcularPrecio($idZona, $idVehiculo, $idTipo)
   {
-    return Precio::where(compact('idZona', 'idVehiculo', 'idTipo'))
-      ->value('precio') ?? 0;
+    // Asegúrate de que siempre se devuelva un precio válido
+    return Precio::where([
+      'id_zona' => $idZona,
+      'id_vehiculo' => $idVehiculo,
+      'id_tipo_reserva' => $idTipo
+    ])->value('precio') ?? 0; // Si no se encuentra, devolver 0 por defecto
   }
 
 }
