@@ -21,7 +21,7 @@ return new class extends Migration {
       $table->unsignedBigInteger('id_destino')->nullable();
       $table->date('fecha_entrada')->nullable();
       $table->time('hora_entrada')->nullable();
-      $table->string('numero_vuelo_entrada', 50);
+      $table->string('numero_vuelo_entrada', 50)->nullable();
       $table->string('origen_vuelo_entrada', 100)->nullable();
       $table->time('hora_vuelo_salida')->nullable();
       $table->date('fecha_vuelo_salida')->nullable();

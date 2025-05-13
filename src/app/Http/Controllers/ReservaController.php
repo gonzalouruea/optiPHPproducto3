@@ -14,17 +14,17 @@ use App\Models\Precio; // tabla de tarifas por zona/vehículo
 
 class ReservaController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            // Permite el acceso a los usuarios con roles 'admin', 'corporativo' o 'usuario'
-            if (Auth::check() && in_array(Auth::user()->rol, ['admin', 'corporativo', 'usuario'])) {
-                return $next($request);
-            }
-
-            abort(403, 'Acceso no autorizado');
-        });
+  public function __construct()
+  {
+    $this->middleware(function ($request, $next) {
+      // Permite el acceso a los usuarios con roles 'admin', 'corporativo' o 'usuario'
+      if (Auth::check() && in_array(Auth::user()->rol, ['admin', 'corporativo', 'usuario'])) {
+        return $next($request);
       }
+
+      abort(403, 'Acceso no autorizado');
+    });
+  }
 
   /** Lista de reservas del hotel */
   public function index()
@@ -70,15 +70,29 @@ class ReservaController extends Controller
   }
 
   /** formulario nueva reserva */
+  // app/Http/Controllers/ReservaController.php
+
   public function create()
   {
-    $vehiculos = Vehiculo::all();
-    $tiposReserva = TipoReserva::all();
+    $tiposReserva = [];
 
-    /* solo si el que entra es admin */
-    $usuarios = Auth::user()->rol === 'admin'
+    // 1) Si no hay tipos en BD, creamos los tres de serie:
+    if (TipoReserva::count() === 0) {
+      TipoReserva::insert([
+        ['Descripción' => 'Aeropuerto → Hotel'],
+        ['Descripción' => 'Hotel → Aeropuerto'],
+        ['Descripción' => 'Ida y Vuelta'],
+      ]);
+    }
+
+    // 2) Recuperamos todos (ahora incluye los 3 básicos + los que haya creado el admin)
+    $tiposReserva = TipoReserva::all();
+    $vehiculos = Vehiculo::all();
+
+    // 3) Si es admin, también pasamos la lista de usuarios para asignar reserva
+    $usuarios = Auth::user()->esAdmin()
       ? Viajero::select('id_viajero', 'email')->get()
-      : collect();   // colección vacía para no-admins
+      : collect();
 
     return view('reservas.create', compact('vehiculos', 'tiposReserva', 'usuarios'));
   }
@@ -86,104 +100,105 @@ class ReservaController extends Controller
 
 
 
-    /** almacena la reserva + cálculo de comisión */
-    public function store(Request $r)
-    {
-        // Validaciones de los datos del formulario
-        $r->validate([
-            'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-            'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-            'num_viajeros' => 'required|integer|min:1',
-            // Al menos una fecha/hora
-            'fecha_hotel' => 'nullable|date',
-            'hora_hotel' => 'nullable',
-            'fecha_vuelo' => 'nullable|date',
-            'hora_vuelo' => 'nullable',
-        ]);
 
-        // Verificar si el usuario es corporativo
-        if (Auth::user()->rol === 'corporativo') {
-            // Si es corporativo, obtener el hotel asociado
-            $hotel = Auth::user()->hotel;
+  /** almacena la reserva + cálculo de comisión */
+  public function store(Request $r)
+  {
+    // Validaciones de los datos del formulario
+    $r->validate([
+      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+      'num_viajeros' => 'required|integer|min:1',
+      // Al menos una fecha/hora
+      'fecha_hotel' => 'nullable|date',
+      'hora_hotel' => 'nullable',
+      'fecha_vuelo' => 'nullable|date',
+      'hora_vuelo' => 'nullable',
+    ]);
 
-            // Asegúrate de que el hotel tiene una zona asociada
-            if ($hotel && $hotel->id_zona) {
-                // Calcular el precio utilizando la zona del hotel
-                $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
-                // Comisión variable según lo pactado
-                $comision = round($precio * $hotel->comision / 100, 2);
-            } else {
-                // Maneja el caso cuando no haya zona asociada al hotel
-                return redirect()->back()->with('error', 'El hotel no tiene zona asociada.');
-            }
-        } else {
-            // Si no es corporativo, manejar la lógica sin asociar el hotel
-            // Definir un precio predeterminado o cualquier otro comportamiento
-            $precio = $this->calcularPrecioDefault($r->id_vehiculo, $r->id_tipo_reserva);
-            $comision = 0; // Si no hay hotel, no hay comisión
-        }
+    // Verificar si el usuario es corporativo
+    if (Auth::user()->rol === 'corporativo') {
+      // Si es corporativo, obtener el hotel asociado
+      $hotel = Auth::user()->hotel;
 
-        // Guardamos la reserva
-        Reserva::create([
-            'localizador' => Reserva::generarLocalizador(),
-            'id_hotel' => $hotel->id_hotel ?? null, // Puede ser null si no es corporativo
-            'id_tipo_reserva' => $r->id_tipo_reserva,
-            'email_cliente' => Auth::user()->email,
-            'fecha_reserva' => now(),
-            'fecha_modificacion' => now(),
-            'fecha_entrada' => $r->fecha_hotel,
-            'hora_entrada' => $r->hora_hotel,
-            'fecha_vuelo_salida' => $r->fecha_vuelo,
-            'hora_vuelo_salida' => $r->hora_vuelo,
-            'num_viajeros' => $r->num_viajeros,
-            'id_vehiculo' => $r->id_vehiculo,
-            'precio' => $precio,
-            'comision_hotel' => $comision,
-            'numero_vuelo_entrada' => $r->numero_vuelo_entrada, // Incluyendo el campo de vuelo
-        ]);
-
-        return back()->with('success', 'Reserva creada correctamente.');
+      // Asegúrate de que el hotel tiene una zona asociada
+      if ($hotel && $hotel->id_zona) {
+        // Calcular el precio utilizando la zona del hotel
+        $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
+        // Comisión variable según lo pactado
+        $comision = round($precio * $hotel->comision / 100, 2);
+      } else {
+        // Maneja el caso cuando no haya zona asociada al hotel
+        return redirect()->back()->with('error', 'El hotel no tiene zona asociada.');
+      }
+    } else {
+      // Si no es corporativo, manejar la lógica sin asociar el hotel
+      // Definir un precio predeterminado o cualquier otro comportamiento
+      $precio = $this->calcularPrecioDefault($r->id_vehiculo, $r->id_tipo_reserva);
+      $comision = 0; // Si no hay hotel, no hay comisión
     }
 
-    /** Muestra detalle */
-    public function show(Reserva $reserva)
-    {
-        $this->autorizar($reserva);
-        return view('reservas.show', compact('reserva'));
-    }
+    // Guardamos la reserva
+    Reserva::create([
+      'localizador' => Reserva::generarLocalizador(),
+      'id_hotel' => $hotel->id_hotel ?? null, // Puede ser null si no es corporativo
+      'id_tipo_reserva' => $r->id_tipo_reserva,
+      'email_cliente' => Auth::user()->email,
+      'fecha_reserva' => now(),
+      'fecha_modificacion' => now(),
+      'fecha_entrada' => $r->fecha_hotel,
+      'hora_entrada' => $r->hora_hotel,
+      'fecha_vuelo_salida' => $r->fecha_vuelo,
+      'hora_vuelo_salida' => $r->hora_vuelo,
+      'num_viajeros' => $r->num_viajeros,
+      'id_vehiculo' => $r->id_vehiculo,
+      'precio' => $precio,
+      'comision_hotel' => $comision,
+      'numero_vuelo_entrada' => $r->numero_vuelo_entrada, // Incluyendo el campo de vuelo
+    ]);
 
-    /** Eliminar (cancelar) */
-    public function destroy(Reserva $reserva)
-    {
-        $this->autorizar($reserva);
-        $reserva->delete();
+    return back()->with('success', 'Reserva creada correctamente.');
+  }
 
-        return back()->with('success', 'Reserva eliminada');
-    }
+  /** Muestra detalle */
+  public function show(Reserva $reserva)
+  {
+    $this->autorizar($reserva);
+    return view('reservas.show', compact('reserva'));
+  }
 
-    /* ··· helpers ··· */
-    private function autorizar(Reserva $reserva)
-    {
-        if ($reserva->id_hotel !== Auth::user()->id_hotel) {
-            abort(403, 'Entra por aqui');
-        }
-    }
+  /** Eliminar (cancelar) */
+  public function destroy(Reserva $reserva)
+  {
+    $this->autorizar($reserva);
+    $reserva->delete();
 
-    private function calcularPrecio($idZona, $idVehiculo, $idTipo)
-    {
-        // Asegúrate de que siempre se devuelva un precio válido
-        return Precio::where([
-            'id_zona' => $idZona,
-            'id_vehiculo' => $idVehiculo,
-            'id_tipo_reserva' => $idTipo
-        ])->value('precio') ?? 0; // Si no se encuentra, devolver 0 por defecto
-    }
+    return back()->with('success', 'Reserva eliminada');
+  }
 
-    // Método para calcular el precio predeterminado cuando no hay hotel
-    private function calcularPrecioDefault($id_vehiculo, $id_tipo_reserva)
-    {
-        // Lógica de cálculo del precio predeterminado
-        // Puede ser un precio fijo o cualquier otro cálculo necesario
-        return 100; // Ejemplo de precio fijo
+  /* ··· helpers ··· */
+  private function autorizar(Reserva $reserva)
+  {
+    if ($reserva->id_hotel !== Auth::user()->id_hotel) {
+      abort(403, 'Entra por aqui');
     }
+  }
+
+  private function calcularPrecio($idZona, $idVehiculo, $idTipo)
+  {
+    // Asegúrate de que siempre se devuelva un precio válido
+    return Precio::where([
+      'id_zona' => $idZona,
+      'id_vehiculo' => $idVehiculo,
+      'id_tipo_reserva' => $idTipo
+    ])->value('precio') ?? 0; // Si no se encuentra, devolver 0 por defecto
+  }
+
+  // Método para calcular el precio predeterminado cuando no hay hotel
+  private function calcularPrecioDefault($id_vehiculo, $id_tipo_reserva)
+  {
+    // Lógica de cálculo del precio predeterminado
+    // Puede ser un precio fijo o cualquier otro cálculo necesario
+    return 100; // Ejemplo de precio fijo
+  }
 }
