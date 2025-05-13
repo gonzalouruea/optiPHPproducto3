@@ -129,7 +129,7 @@ class AdminController extends Controller
     $request->validate([
       'id_zona' => 'required|exists:transfer_zona,id_zona',
       'descripcion' => 'required|string|max:100',
-      'Comision' => 'required|numeric',
+      'comision' => 'required|numeric',
       'Usuario' => 'required|string|max:100',
       'password' => 'required|string|min:6',
     ]);
@@ -138,7 +138,7 @@ class AdminController extends Controller
       Hotel::create([
         'id_zona' => $request->id_zona,
         'descripcion' => $request->descripcion,
-        'Comision' => $request->Comision,
+        'comision' => $request->comision,
         'Usuario' => $request->Usuario,
         'password' => Hash::make($request->password),
       ]);
@@ -164,7 +164,7 @@ class AdminController extends Controller
     $request->validate([
       'id_zona' => 'required|exists:transfer_zona,id_zona',
       'descripcion' => 'required|string|max:100',
-      'Comision' => 'required|numeric',
+      'comision' => 'required|numeric',
       'Usuario' => 'required|string|max:100',
       'password' => 'nullable|string|min:6',
     ]);
@@ -174,7 +174,7 @@ class AdminController extends Controller
 
       $hotel->id_zona = $request->id_zona;
       $hotel->descripcion = $request->descripcion;
-      $hotel->Comision = $request->Comision;
+      $hotel->comision = $request->comision;
       $hotel->Usuario = $request->Usuario;
 
       if ($request->filled('password')) {
