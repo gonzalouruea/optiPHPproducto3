@@ -54,6 +54,8 @@ class Reserva extends Model
     'localizador',
     'id_hotel',
     'id_tipo_reserva',
+    'precio',            // ← añadido
+    'comision_hotel',
     'email_cliente',
     'fecha_reserva',
     'fecha_modificacion',
