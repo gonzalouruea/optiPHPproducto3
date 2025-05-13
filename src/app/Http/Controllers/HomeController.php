@@ -44,10 +44,8 @@ class HomeController extends Controller
 
     if ($user->esCorporativo()) {
       // el blade que tienes en resources/views/hotel/dashboard.blade.php
-      return view('hotel.dashboard', [
-        'reservas_totales' => $total,
-        'reservas_hoy' => $reservasHoy,
-      ]);
+      return redirect()->route('hotel.dashboard');
+
     }
 
     // usuario normal (o admin) usa auth/dashboard.blade.php
