@@ -43,7 +43,7 @@ class Hotel
     $sql = "UPDATE transfer_hotel
                 SET id_zona = ?,
                     descripcion = ?,
-                    Comision = ?,
+                    comision = ?,
                     usuario = ?";
     $params = [$data['id_zona'], $data['descripcion'], $data['comision'], $data['usuario']];
     if (!empty($data['password'])) {

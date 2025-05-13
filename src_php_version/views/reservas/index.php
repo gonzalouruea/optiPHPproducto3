@@ -70,7 +70,8 @@
                 if ($canEdit): ?>
                   <a class="btn btn-sm btn-outline-primary"
                     href="index.php?controller=Reserva&action=edit&id=<?= $reserva['id_reserva'] ?>">Editar</a>
-                  <form action="index.php?controller=Reserva&action=delete" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro de cancelar?')">
+                  <form action="index.php?controller=Reserva&action=delete" method="POST" class="d-inline"
+                    onsubmit="return confirm('¿Seguro de cancelar?')">
                     <input type="hidden" name="id_reserva" value="<?= $reserva['id_reserva'] ?>">
                     <button class="btn btn-sm btn-outline-danger">Cancelar</button>
                   </form>

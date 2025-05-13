@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Viajero;   // o User, según tu diseño
 use App\Models\Reserva;
 use App\Models\Vehiculo;
+use App\Models\Hotel;
 use App\Models\TipoReserva;
 use App\Models\Precio; // tabla de tarifas por zona/vehículo
 
@@ -34,27 +35,21 @@ class ReservaController extends Controller
   {
     $user = Auth::user();
 
+    // Siempre cargamos vehiculo, tipoReserva *y* hotel
+    $base = Reserva::with(['vehiculo', 'tipoReserva', 'hotel'])
+      ->latest('created_at');
+
     if ($user->esAdmin()) {
-      // Admin ve todas
-      $reservas = Reserva::with(['vehiculo', 'tipoReserva', 'hotel'])
-        ->latest('created_at')
-        ->get();
+      $reservas = $base->get();
     } elseif ($user->esCorporativo()) {
-      // Corporativo ve solo las de su hotel
-      $reservas = Reserva::with(['vehiculo', 'tipoReserva'])
-        ->where('id_hotel', $user->id_hotel)
-        ->latest('created_at')
-        ->get();
+      $reservas = $base->where('id_hotel', $user->id_hotel)->get();
     } else {
-      // Usuario normal ve solo las suyas
-      $reservas = Reserva::with(['vehiculo', 'tipoReserva'])
-        ->where('email_cliente', $user->email)
-        ->latest('created_at')
-        ->get();
+      $reservas = $base->where('email_cliente', $user->email)->get();
     }
 
     return view('reservas.index', compact('reservas'));
   }
+
 
 
   public function calendario()
@@ -121,7 +116,12 @@ class ReservaController extends Controller
       ? Viajero::select('id_viajero', 'email')->get()
       : collect();
 
-    return view('reservas.create', compact('vehiculos', 'tiposReserva', 'usuarios'));
+    $hoteles = Auth::user()->rol === 'usuario'
+      ? Hotel::all()
+      : collect();
+
+    return view('reservas.create', compact('vehiculos', 'tiposReserva', 'usuarios', 'hoteles'));
+
   }
 
 
@@ -133,44 +133,42 @@ class ReservaController extends Controller
 
   public function store(Request $r)
   {
-    // 1) Validaciones
+    // 1) Validaciones (añade id_hotel)
     $r->validate([
+      'id_hotel' => 'required|exists:transfer_hotel,id_hotel',
       'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
       'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-      'num_viajeros' => 'required|integer|min:1',
-      'fecha_entrada' => 'nullable|date',
-      'hora_entrada' => 'nullable|date_format:H:i',
-      'fecha_vuelo_salida' => 'nullable|date',
-      'hora_vuelo_salida' => 'nullable|date_format:H:i',
-      'numero_vuelo_entrada' => 'nullable|string|max:50',
-      'origen_vuelo_entrada' => 'nullable|string|max:100',
-      'hora_recogida' => 'nullable|date_format:H:i',
+      // … resto…
     ]);
 
-    // 2) Precio y comisión (siempre definimos ambas variables)
     $user = Auth::user();
-    $hotel = $user->rol === 'corporativo' ? $user->hotel : null;
 
+    // 2) Determina el hotel:
+    if ($user->rol === 'corporativo') {
+      // Para corporativo uso el hotel asociado a su cuenta
+      $hotel = $user->hotel;
+    } else {
+      // Para admin/usuario uso el hotel que venga en el request
+      $hotel = Hotel::findOrFail($r->id_hotel);
+    }
+
+    // 3) Precio y comisión (idéntico)
     if ($hotel && $hotel->id_zona) {
-      // calculas con la zona del hotel
       $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
       $comision = round($precio * $hotel->comision / 100, 2);
     } else {
-      // precio por defecto para admin/usuario
       $precio = $this->calcularPrecioDefault($r->id_vehiculo, $r->id_tipo_reserva);
       $comision = 0;
     }
 
-    // 3) Creación
+    // 4) Crea la reserva **usando el hotel correcto****
     Reserva::create([
       'localizador' => Reserva::generarLocalizador(),
-      'id_hotel' => $hotel->id_hotel ?? null,
+      'id_hotel' => $hotel->id_hotel,        // <-- aquí
       'id_tipo_reserva' => $r->id_tipo_reserva,
       'email_cliente' => $user->email,
       'fecha_reserva' => now(),
       'fecha_modificacion' => now(),
-
-      // **Campos de llegada / salida, igual que en el form**
       'fecha_entrada' => $r->fecha_entrada,
       'hora_entrada' => $r->hora_entrada,
       'fecha_vuelo_salida' => $r->fecha_vuelo_salida,
@@ -178,8 +176,6 @@ class ReservaController extends Controller
       'numero_vuelo_entrada' => $r->numero_vuelo_entrada,
       'origen_vuelo_entrada' => $r->origen_vuelo_entrada,
       'hora_recogida' => $r->hora_recogida,
-
-      // resto de datos
       'num_viajeros' => $r->num_viajeros,
       'id_vehiculo' => $r->id_vehiculo,
       'precio' => $precio,
@@ -188,6 +184,7 @@ class ReservaController extends Controller
 
     return back()->with('success', 'Reserva creada correctamente.');
   }
+
 
 
 

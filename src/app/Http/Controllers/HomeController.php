@@ -40,12 +40,23 @@ class HomeController extends Controller
         ->orWhereDate('fecha_vuelo_salida', $hoy);
     })->count();
 
-    return view('home', [
+    $user = auth()->user();
+
+    if ($user->esCorporativo()) {
+      // el blade que tienes en resources/views/hotel/dashboard.blade.php
+      return view('hotel.dashboard', [
+        'reservas_totales' => $total,
+        'reservas_hoy' => $reservasHoy,
+      ]);
+    }
+
+    // usuario normal (o admin) usa auth/dashboard.blade.php
+    return view('auth.dashboard', [
       'reservas_totales' => $total,
       'reservas_hoy' => $reservasHoy,
-      // … otros datos que pases a la vista …
     ]);
   }
+
 
   /**
    * Muestra la página de bienvenida.

@@ -4,9 +4,9 @@
   <h2>Gestionar Hoteles</h2>
 
   <?php if (!empty($error)): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
   <?php elseif (!empty($_GET['success'])): ?>
-                <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
   <?php endif; ?>
 
   <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#nuevoHotelModal">
@@ -17,8 +17,8 @@
     <table class="table table-striped">
       <thead>
         <tr>
-        <th>Descripci&oacute;n</th>
-        <th>Zona</th>
+          <th>Descripci&oacute;n</th>
+          <th>Zona</th>
           <th>Usuario</th>
           <th>Comisión</th>
           <th>Acciones</th>
@@ -26,22 +26,23 @@
       </thead>
       <tbody>
         <?php foreach ($hoteles as $hotel): ?>
-                    <tr>
-                    <td><?= htmlspecialchars($hotel['descripcion'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($hotel['zona_nombre'] ?? 'Sin zona') ?></td>
-                      <td><?= htmlspecialchars($hotel['Usuario']) ?></td>
-                      <td><?= htmlspecialchars($hotel['Comision']) ?>%</td>
-                      <td>
-                        <button class="btn btn-sm btn-primary" onclick="editarHotel(<?= htmlspecialchars(json_encode($hotel)) ?>)">
-                          Editar
-                        </button>
-                        <form action="index.php?controller=Admin&action=gestionarHoteles" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro de eliminar?')">
-                          <input type="hidden" name="action" value="delete">
-                          <input type="hidden" name="id_hotel" value="<?= $hotel['id_hotel'] ?>">
-                          <button class="btn btn-sm btn-danger">Borrar</button>
-                        </form>
-                      </td>
-                    </tr>
+          <tr>
+            <td><?= htmlspecialchars($hotel['descripcion'] ?? '') ?></td>
+            <td><?= htmlspecialchars($hotel['zona_nombre'] ?? 'Sin zona') ?></td>
+            <td><?= htmlspecialchars($hotel['Usuario']) ?></td>
+            <td><?= htmlspecialchars($hotel['comision']) ?>%</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="editarHotel(<?= htmlspecialchars(json_encode($hotel)) ?>)">
+                Editar
+              </button>
+              <form action="index.php?controller=Admin&action=gestionarHoteles" method="POST" class="d-inline"
+                onsubmit="return confirm('¿Seguro de eliminar?')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id_hotel" value="<?= $hotel['id_hotel'] ?>">
+                <button class="btn btn-sm btn-danger">Borrar</button>
+              </form>
+            </td>
+          </tr>
         <?php endforeach; ?>
       </tbody>
     </table>
@@ -68,7 +69,7 @@
             <select class="form-select" name="id_zona" required>
               <option value="">Selecciona zona</option>
               <?php foreach ($zonas as $z): ?>
-                          <option value="<?= $z['id_zona'] ?>"><?= htmlspecialchars($z['descripcion']) ?></option>
+                <option value="<?= $z['id_zona'] ?>"><?= htmlspecialchars($z['descripcion']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -113,7 +114,7 @@
             <select class="form-select" name="id_zona" id="edit_id_zona" required>
               <option value="">Selecciona zona</option>
               <?php foreach ($zonas as $z): ?>
-                          <option value="<?= $z['id_zona'] ?>"><?= htmlspecialchars($z['descripcion']) ?></option>
+                <option value="<?= $z['id_zona'] ?>"><?= htmlspecialchars($z['descripcion']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -137,15 +138,15 @@
 </div>
 
 <script>
-function editarHotel(hotel) {
-  document.getElementById('edit_id_hotel').value = hotel.id_hotel;
-  document.getElementById('edit_descripcion').value = hotel.descripcion;
-  document.getElementById('edit_id_zona').value = hotel.id_zona;
-  document.getElementById('edit_usuario').value = hotel.Usuario;
-  document.getElementById('edit_comision').value = hotel.Comision;
-  document.getElementById('edit_password').value = '';
-  new bootstrap.Modal(document.getElementById('editarHotelModal')).show();
-}
+  function editarHotel(hotel) {
+    document.getElementById('edit_id_hotel').value = hotel.id_hotel;
+    document.getElementById('edit_descripcion').value = hotel.descripcion;
+    document.getElementById('edit_id_zona').value = hotel.id_zona;
+    document.getElementById('edit_usuario').value = hotel.Usuario;
+    document.getElementById('edit_comision').value = hotel.comision;
+    document.getElementById('edit_password').value = '';
+    new bootstrap.Modal(document.getElementById('editarHotelModal')).show();
+  }
 </script>
 
 <?php include __DIR__ . '/../layout/footer.php'; ?>
