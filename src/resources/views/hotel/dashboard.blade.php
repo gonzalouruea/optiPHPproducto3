@@ -24,8 +24,7 @@
       <div class="d-flex justify-content-between align-items-center">
         <div>
         <h5 class="card-title">Reservas Totales</h5>
-        <h2 class="mb-0">{{ $reservas_totales }}</h2>
-
+        <h2 class="mb-0">{{ $stats['reservas_totales'] }}</h2>
         </div>
         <i class="fas fa-calendar-check fa-3x opacity-50"></i>
       </div>
@@ -44,7 +43,7 @@
       <div class="d-flex justify-content-between align-items-center">
         <div>
         <h5 class="card-title">Reservas Hoy</h5>
-        <h2 class="mb-0">{{ $reservas_hoy }}</h2>
+        <h2 class="mb-0">{{ $stats['reservas_hoy'] }}</h2>
         </div>
         <i class="fas fa-calendar-day fa-3x opacity-50"></i>
       </div>
