@@ -38,7 +38,7 @@
 ·─────────────────────────────────────────────-->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
     <div class="container">
-      <a class="navbar-brand" href="{{ route('welcome') }}">Sistema de Reservas</a>
+      <a class="navbar-brand" href="{{ route('dashboard') }}">Sistema de Reservas</a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
