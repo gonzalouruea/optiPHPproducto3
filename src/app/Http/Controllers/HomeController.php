@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;        // <-- Import de Carbon
 use App\Models\Reserva;
 use App\Models\Hotel;
 use App\Models\Vehiculo;
@@ -27,16 +28,23 @@ class HomeController extends Controller
    */
   public function index()
   {
-    // Estadísticas para el dashboard
-    $stats = [
-      'reservas_totales' => Reserva::count(),
-      'reservas_hoy' => Reserva::whereDate('fecha_reserva', today())->count(),
-      'hoteles' => Hotel::count(),
-      'vehiculos' => Vehiculo::count(),
-      'usuarios' => Viajero::where('rol', 'usuario')->count(),
-    ];
+    // Fecha de hoy en formato YYYY-MM-DD
+    $hoy = Carbon::today()->toDateString();
 
-    return view('auth.dashboard', compact('stats'));
+    // Total de reservas
+    $total = Reserva::count();
+
+    // Reservas cuya llegada o salida está programada para hoy
+    $reservasHoy = Reserva::where(function ($q) use ($hoy) {
+      $q->whereDate('fecha_entrada', $hoy)
+        ->orWhereDate('fecha_vuelo_salida', $hoy);
+    })->count();
+
+    return view('home', [
+      'reservas_totales' => $total,
+      'reservas_hoy' => $reservasHoy,
+      // … otros datos que pases a la vista …
+    ]);
   }
 
   /**

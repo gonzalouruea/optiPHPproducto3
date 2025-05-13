@@ -27,47 +27,74 @@ class ReservaController extends Controller
   }
 
   /** Lista de reservas del hotel */
+  /**
+   * Lista de reservas según rol.
+   */
   public function index()
   {
-    $hotelId = Auth::user()->id_hotel;
-    $reservas = Reserva::with(['vehiculo', 'tipoReserva'])
-      ->where('id_hotel', $hotelId)
-      ->latest('created_at')
-      ->get();
+    $user = Auth::user();
+
+    if ($user->esAdmin()) {
+      // Admin ve todas
+      $reservas = Reserva::with(['vehiculo', 'tipoReserva', 'hotel'])
+        ->latest('created_at')
+        ->get();
+    } elseif ($user->esCorporativo()) {
+      // Corporativo ve solo las de su hotel
+      $reservas = Reserva::with(['vehiculo', 'tipoReserva'])
+        ->where('id_hotel', $user->id_hotel)
+        ->latest('created_at')
+        ->get();
+    } else {
+      // Usuario normal ve solo las suyas
+      $reservas = Reserva::with(['vehiculo', 'tipoReserva'])
+        ->where('email_cliente', $user->email)
+        ->latest('created_at')
+        ->get();
+    }
 
     return view('reservas.index', compact('reservas'));
   }
+
 
   public function calendario()
   {
     $user = auth()->user();
 
-    /* ── ❷ eventos según rol ─────────────────────────────────── */
+    // 1) Filtrar según rol
     if ($user->rol === 'corporativo') {
-      if (!$user->id_hotel) {
-        return back()->withErrors(
-          'Tu cuenta corporativa aún no tiene hotel asignado.'
-        );
-      }
-
       $query = Reserva::where('id_hotel', $user->id_hotel);
     } elseif ($user->rol === 'admin') {
-      $query = Reserva::query();                // todas las reservas
-    } else {   // usuario particular
+      $query = Reserva::query();
+    } else {
       $query = Reserva::where('email_cliente', $user->email);
     }
 
-    /* ── ❸ selecciona columnas reales de tu tabla ────────────── */
-    $eventos = $query->select([
-      'id_reserva  as id',
-      \DB::raw("CONCAT(localizador,' · ',num_viajeros,' pax') as title"),
-      \DB::raw("CONCAT(fecha_entrada,'T',hora_entrada) as start")
-    ])->get();
+    // 2) Sacamos las llegadas
+    $llegadas = (clone $query)
+      ->whereNotNull('fecha_entrada')
+      ->select([
+        \DB::raw("CONCAT('l-', id_reserva) as id"),
+        \DB::raw("CONCAT(localizador,' · ',num_viajeros,' pax (Llegada)') as title"),
+        \DB::raw("CONCAT(fecha_entrada,'T',hora_entrada) as start"),
+      ])->get();
 
-    return view('reservas.calendario', [
-      'eventos' => $eventos->toJson(),
-    ]);
+    // 2) Sacamos salidas
+    $salidas = (clone $query)
+      ->whereNotNull('fecha_vuelo_salida')
+      ->select([
+        \DB::raw("CONCAT('s-', id_reserva) as id"),
+        \DB::raw("CONCAT(localizador,' · ',num_viajeros,' pax (Salida)') as title"),
+        \DB::raw("CONCAT(fecha_vuelo_salida,'T',hora_vuelo_salida) as start"),
+      ])->get();
+
+    // 3) Mezclamos y enviamos
+    $eventos = $llegadas->merge($salidas);
+
+    return view('reservas.calendario', compact('eventos'));
+
   }
+
 
   /** formulario nueva reserva */
   // app/Http/Controllers/ReservaController.php
@@ -102,63 +129,67 @@ class ReservaController extends Controller
 
 
   /** almacena la reserva + cálculo de comisión */
+  // En ReservaController@store
+
   public function store(Request $r)
   {
-    // Validaciones de los datos del formulario
+    // 1) Validaciones
     $r->validate([
       'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
       'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
       'num_viajeros' => 'required|integer|min:1',
-      // Al menos una fecha/hora
-      'fecha_hotel' => 'nullable|date',
-      'hora_hotel' => 'nullable',
-      'fecha_vuelo' => 'nullable|date',
-      'hora_vuelo' => 'nullable',
+      'fecha_entrada' => 'nullable|date',
+      'hora_entrada' => 'nullable|date_format:H:i',
+      'fecha_vuelo_salida' => 'nullable|date',
+      'hora_vuelo_salida' => 'nullable|date_format:H:i',
+      'numero_vuelo_entrada' => 'nullable|string|max:50',
+      'origen_vuelo_entrada' => 'nullable|string|max:100',
+      'hora_recogida' => 'nullable|date_format:H:i',
     ]);
 
-    // Verificar si el usuario es corporativo
-    if (Auth::user()->rol === 'corporativo') {
-      // Si es corporativo, obtener el hotel asociado
-      $hotel = Auth::user()->hotel;
+    // 2) Precio y comisión (siempre definimos ambas variables)
+    $user = Auth::user();
+    $hotel = $user->rol === 'corporativo' ? $user->hotel : null;
 
-      // Asegúrate de que el hotel tiene una zona asociada
-      if ($hotel && $hotel->id_zona) {
-        // Calcular el precio utilizando la zona del hotel
-        $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
-        // Comisión variable según lo pactado
-        $comision = round($precio * $hotel->comision / 100, 2);
-      } else {
-        // Maneja el caso cuando no haya zona asociada al hotel
-        return redirect()->back()->with('error', 'El hotel no tiene zona asociada.');
-      }
+    if ($hotel && $hotel->id_zona) {
+      // calculas con la zona del hotel
+      $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
+      $comision = round($precio * $hotel->comision / 100, 2);
     } else {
-      // Si no es corporativo, manejar la lógica sin asociar el hotel
-      // Definir un precio predeterminado o cualquier otro comportamiento
+      // precio por defecto para admin/usuario
       $precio = $this->calcularPrecioDefault($r->id_vehiculo, $r->id_tipo_reserva);
-      $comision = 0; // Si no hay hotel, no hay comisión
+      $comision = 0;
     }
 
-    // Guardamos la reserva
+    // 3) Creación
     Reserva::create([
       'localizador' => Reserva::generarLocalizador(),
-      'id_hotel' => $hotel->id_hotel ?? null, // Puede ser null si no es corporativo
+      'id_hotel' => $hotel->id_hotel ?? null,
       'id_tipo_reserva' => $r->id_tipo_reserva,
-      'email_cliente' => Auth::user()->email,
+      'email_cliente' => $user->email,
       'fecha_reserva' => now(),
       'fecha_modificacion' => now(),
-      'fecha_entrada' => $r->fecha_hotel,
-      'hora_entrada' => $r->hora_hotel,
-      'fecha_vuelo_salida' => $r->fecha_vuelo,
-      'hora_vuelo_salida' => $r->hora_vuelo,
+
+      // **Campos de llegada / salida, igual que en el form**
+      'fecha_entrada' => $r->fecha_entrada,
+      'hora_entrada' => $r->hora_entrada,
+      'fecha_vuelo_salida' => $r->fecha_vuelo_salida,
+      'hora_vuelo_salida' => $r->hora_vuelo_salida,
+      'numero_vuelo_entrada' => $r->numero_vuelo_entrada,
+      'origen_vuelo_entrada' => $r->origen_vuelo_entrada,
+      'hora_recogida' => $r->hora_recogida,
+
+      // resto de datos
       'num_viajeros' => $r->num_viajeros,
       'id_vehiculo' => $r->id_vehiculo,
       'precio' => $precio,
       'comision_hotel' => $comision,
-      'numero_vuelo_entrada' => $r->numero_vuelo_entrada, // Incluyendo el campo de vuelo
     ]);
 
     return back()->with('success', 'Reserva creada correctamente.');
   }
+
+
 
   /** Muestra detalle */
   public function show(Reserva $reserva)

@@ -3,7 +3,8 @@
 @section('title', 'Calendario de Reservas')
 
 @section('styles')
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+  <!-- FullCalendar v5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet" />
   <style>
     #calendar {
     max-width: 1200px;
@@ -50,28 +51,28 @@
 @endsection
 
 @section('scripts')
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/es.js'></script>
+  <!-- FullCalendar v5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+  <!-- Todo en un único fichero de locales -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales-all.min.js"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+    // Elementos UI
     const calendarEl = document.getElementById('calendar');
     const btnMes = document.getElementById('btnMes');
     const btnSemana = document.getElementById('btnSemana');
     const btnDia = document.getElementById('btnDia');
     const btnHoy = document.getElementById('btnHoy');
 
-    // Eventos del calendario
+    // Tus eventos inyectados desde el controlador
     const eventos = @json($eventos);
 
-    // Inicializar calendario
+    // Inicializar FullCalendar
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
       locale: 'es',
-      headerToolbar: {
-      left: 'prev,next',
-      center: 'title',
-      right: ''
-      },
+      headerToolbar: false,    // quitamos la toolbar nativa
       events: eventos,
       eventTimeFormat: {
       hour: '2-digit',
@@ -80,37 +81,22 @@
       },
       dayMaxEvents: true,
       height: 'auto',
-      firstDay: 1, // Lunes como primer día de la semana
+      firstDay: 1               // lunes como primer día
     });
 
     calendar.render();
 
-    // Cambiar vistas
-    btnMes.addEventListener('click', function () {
-      calendar.changeView('dayGridMonth');
-      setActiveButton(btnMes);
-    });
-
-    btnSemana.addEventListener('click', function () {
-      calendar.changeView('timeGridWeek');
-      setActiveButton(btnSemana);
-    });
-
-    btnDia.addEventListener('click', function () {
-      calendar.changeView('timeGridDay');
-      setActiveButton(btnDia);
-    });
-
-    btnHoy.addEventListener('click', function () {
-      calendar.today();
-    });
-
-    function setActiveButton(activeBtn) {
-      [btnMes, btnSemana, btnDia].forEach(btn => {
-      btn.classList.remove('active');
-      });
-      activeBtn.classList.add('active');
+    // Helper para marcar botón activo
+    function setActive(btn) {
+      [btnMes, btnSemana, btnDia].forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
     }
+
+    // Asignamos nuestros botones
+    btnMes.addEventListener('click', () => { calendar.changeView('dayGridMonth'); setActive(btnMes); });
+    btnSemana.addEventListener('click', () => { calendar.changeView('timeGridWeek'); setActive(btnSemana); });
+    btnDia.addEventListener('click', () => { calendar.changeView('timeGridDay'); setActive(btnDia); });
+    btnHoy.addEventListener('click', () => calendar.today());
     });
   </script>
 @endsection
