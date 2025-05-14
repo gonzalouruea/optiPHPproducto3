@@ -1,10 +1,6 @@
-# Usar una imagen base de PHP 8.1 con Apache
-FROM php:8.1.2-apache
+FROM php:8.1-apache
 
-# Establecer el directorio de trabajo
-WORKDIR /var/www/html
-
-# Instalar dependencias del sistema y extensiones PHP necesarias para Laravel
+# 1) Instalamos libs del sistema
 RUN apt-get update && apt-get install -y \
   libzip-dev \
   libpng-dev \
@@ -13,32 +9,44 @@ RUN apt-get update && apt-get install -y \
   unzip \
   git \
   curl \
-  && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-  && apt-get install -y nodejs \
   && docker-php-ext-install \
   pdo_mysql \
   zip \
   mbstring \
   gd \
+  xml \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-# Habilitar el módulo de reescritura de Apache
+# 2) Habilitamos rewrite
 RUN a2enmod rewrite
 
-# Instalar Composer manualmente
-RUN curl -sS https://getcomposer.org/installer | php && \
-    mv composer.phar /usr/local/bin/composer
+# 3) Instalamos Composer
+RUN curl -sS https://getcomposer.org/installer | php \
+  && mv composer.phar /usr/local/bin/composer \
+  && chmod +x /usr/local/bin/composer
 
-# Copiar el contenido del proyecto al contenedor
-COPY . /var/www/html/
+# 4) Ponemos el directorio de trabajo
+WORKDIR /var/www/html
 
+# 5) Copiamos TODO el código de Laravel (src/) al contenedor
+COPY src/ ./
 
-# Crear los directorios necesarios para Laravel
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
+# 6) Ahora sí instalamos las dependencias con Composer
+RUN composer install --no-dev --optimize-autoloader
 
-# Configuración personalizada de Apache para permitir acceso a /public
-RUN echo "<VirtualHost *:80>\n\
+# 7) Cacheamos config, rutas y vistas
+RUN php artisan config:cache \
+  && php artisan route:cache \
+  && php artisan view:cache
+
+# 8) Preparamos storage y cache dir
+RUN mkdir -p storage bootstrap/cache \
+  && chown -R www-data:www-data storage bootstrap/cache \
+  && chmod -R 775 storage bootstrap/cache
+
+# 9) Configuramos Apache para apuntar a /public
+RUN printf "<VirtualHost *:80>\n\
   DocumentRoot /var/www/html/public\n\
   <Directory /var/www/html/public>\n\
   Options Indexes FollowSymLinks\n\
@@ -47,13 +55,6 @@ RUN echo "<VirtualHost *:80>\n\
   </Directory>\n\
   </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
 
-# Asegurar permisos adecuados para Laravel
-RUN chown -R www-data:www-data /var/www/html \
-  && chmod -R 755 /var/www/html \
-  && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Exponer el puerto 80
 EXPOSE 80
 
-# Comando por defecto: iniciar Apache en primer plano
 CMD ["apache2-foreground"]
