@@ -92,9 +92,9 @@
       </thead>
       <tbody>
 
-      @forelse($stats["reservas"] as $row)
+      @forelse($stats["comisiones_por_mes"] as $row)
       <tr>
-      <td>{{ \Carbon\Carbon::parse($row->mes . '-01')->isoFormat('MMMM YYYY') }}</td>
+      <td>{{ $row->mes }}</td>
       <td>{{ $row->traslados }}</td>
       <td>{{ number_format($row->total_comision, 2) }} €</td>
       </tr>

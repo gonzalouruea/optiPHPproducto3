@@ -32,8 +32,15 @@ Route::middleware(['auth', 'corporativo'])
 /*──────────────────────────────
 |  Rutas públicas
 |──────────────────────────────*/
-Route::get('/', [HomeController::class, 'welcome'])->name('welcome');
-Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+Route::get('/', [HomeController::class, 'index'])->name('index');
+
+
+Route::middleware('auth')
+  ->prefix('viajero')
+  ->name('viajero.')
+  ->group(function () {
+  Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+  });
 
 /*──────────────────────────────
 |  Autenticación

@@ -46,14 +46,7 @@ class AuthController extends Controller
       Auth::login($viajero);               // ← LOGIN
       // -----------------------------------------
       // ⬇️ NUEVO  bloque de redirección según rol
-      switch ($viajero->rol) {
-        case 'corporativo':
-          return redirect()->route('hotel.dashboard');   // panel hotel
-        case 'admin':
-          return redirect()->route('admin.panel');       // panel admin
-        default:                                          // usuario normal
-          return redirect()->route('dashboard');
-      }
+        return redirect()->route('index');   // panel hotel
       // -----------------------------------------
 
     }

@@ -41,18 +41,36 @@ class HomeController extends Controller
     })->count();
 
     $user = auth()->user();
-
+    
+    $stats = [
+      'reservas_totales' => $total,
+      'reservas_hoy' => $reservasHoy
+    ];
     if ($user->esCorporativo()) {
       // el blade que tienes en resources/views/hotel/dashboard.blade.php
-      return redirect()->route('hotel.dashboard');
+      $view = 'hotel.dashboard';
+      $stats['comisiones_por_mes'] = Reserva::selectRaw("
+        DATE_FORMAT(created_at,'%Y-%m') as mes,
+        COUNT(*)                         as traslados,
+        SUM(comision_hotel)              as total_comision")
+        ->where('id_hotel', $user->id_hotel)
+        ->groupByRaw("DATE_FORMAT(created_at,'%Y-%m')")
+        ->orderBy('mes')
+        ->get();
 
+    } elseif ($user->esUsuarioNormal()) {
+      // el blade que tienes en resources/views/viajero/dashboard.blade.php
+      $view = 'usuario.dashboard';
+
+    } elseif ($user->esAdmin()) {
+      // el blade que tienes en resources/views/admin/dashboard.blade.php
+      $view = 'admin.panel';
+      $stats['hoteles'] = Hotel::count();
+      $stats['vehiculos'] = Vehiculo::count();
+      $stats['usuarios'] = Viajero::where('rol', 'usuario')->count();
     }
 
-    // usuario normal (o admin) usa auth/dashboard.blade.php
-    return view('auth.dashboard', [
-      'reservas_totales' => $total,
-      'reservas_hoy' => $reservasHoy,
-    ]);
+    return view($view, compact('stats'));
   }
 
 

@@ -38,7 +38,7 @@
 ·─────────────────────────────────────────────-->
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
     <div class="container">
-      <a class="navbar-brand" href="{{ route('dashboard') }}">Sistema de Reservas</a>
+      <a class="navbar-brand" href="{{ route('index') }}">Sistema de Reservas</a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -48,39 +48,44 @@
         {{-- enlaces a la izquierda --}}
         <ul class="navbar-nav me-auto">
           @auth
-          <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Dashboard</a></li>
+          {{-- Panel Hotel solo para corporativo --}}
+          @if(Auth::user()->rol === 'admin')
+            <li class="nav-item"><a class="nav-link" href="{{ route('index') }}">Dashboard</a></li>
+          @endif
+          @if(Auth::user()->rol === 'corporativo')
+            <li class="nav-item"><a class="nav-link" href="{{ route('index') }}">Dashboard</a></li>
+          @endif
+          @if(Auth::user()->rol === 'usuario')
+            <li class="nav-item"><a class="nav-link" href="{{ route('index') }}">Dashboard</a></li>
+          @endif
           <li class="nav-item"><a class="nav-link" href="{{ route('reservas.index') }}">Mis Reservas</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('reservas.create') }}">Nueva Reserva</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('reservas.calendario') }}">Calendario</a></li>
 
-          {{-- Panel Hotel solo para corporativo --}}
-          @if(Auth::user()->rol === 'corporativo')
-        <li class="nav-item"><a class="nav-link" href="{{ route('hotel.dashboard') }}">Panel Hotel</a></li>
-        @endif
 
           {{-- Menú Administración solo para admin --}}
           @if(Auth::user()->rol === 'admin')
-        <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-          Administración
-        </a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="{{ route('admin.panel') }}">Panel</a></li>
-          <li><a class="dropdown-item" href="{{ route('admin.usuarios.index') }}">Usuarios</a></li>
-          <li>
-          <hr class="dropdown-divider">
+            <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              Administración
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ route('admin.panel') }}">Panel</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.usuarios.index') }}">Usuarios</a></li>
+              <li>
+              <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="{{ route('admin.hoteles.index') }}">Hoteles</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.vehiculos.index') }}">Vehículos</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.zonas.index') }}">Zonas</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.tipos-reserva.index') }}">Tipos de Reserva</a></li>
+              <li><a class="dropdown-item" href="{{ route('admin.precios.index') }}">Precios</a></li>
+              <li>
+              <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="{{ route('admin.reportes.reservas') }}">Reportes</a></li>
+            </ul>
           </li>
-          <li><a class="dropdown-item" href="{{ route('admin.hoteles.index') }}">Hoteles</a></li>
-          <li><a class="dropdown-item" href="{{ route('admin.vehiculos.index') }}">Vehículos</a></li>
-          <li><a class="dropdown-item" href="{{ route('admin.zonas.index') }}">Zonas</a></li>
-          <li><a class="dropdown-item" href="{{ route('admin.tipos-reserva.index') }}">Tipos de Reserva</a></li>
-          <li><a class="dropdown-item" href="{{ route('admin.precios.index') }}">Precios</a></li>
-          <li>
-          <hr class="dropdown-divider">
-          </li>
-          <li><a class="dropdown-item" href="{{ route('admin.reportes.reservas') }}">Reportes</a></li>
-        </ul>
-        </li>
         @endif
       @endauth
         </ul>
