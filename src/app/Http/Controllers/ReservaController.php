@@ -133,16 +133,23 @@ class ReservaController extends Controller
 
   public function store(Request $r)
   {
-    // 1) Validaciones (añade id_hotel)
-    $r->validate([
-      'id_hotel' => 'required|exists:transfer_hotel,id_hotel',
-      'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
-      'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
-      // … resto…
-    ]);
-
     $user = Auth::user();
 
+    // 1) Validaciones (añade id_hotel)
+    if ($user->rol === 'corporativo') {
+      $r->validate([
+        'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+        'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+        // … resto…
+      ]);
+    } elseif ($user->rol == 'usuario') {
+      $r->validate([
+        'id_hotel' => 'required|exists:transfer_hotel,id_hotel',
+        'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+        'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+        // … resto…
+      ]);
+    }
     // 2) Determina el hotel:
     if ($user->rol === 'corporativo') {
       // Para corporativo uso el hotel asociado a su cuenta
