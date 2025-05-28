@@ -20,7 +20,8 @@
         <form action="{{ route('reservas.store') }}" method="POST">
             @csrf
 {{-- Sólo para usuarios normales --}}
-@unless(Auth::user()->rol === 'corporativo' || Auth::user()->esAdmin())
+
+@if (Auth::user()->rol === 'corporativo' || Auth::user()->esAdmin())
   <div class="mb-3">
     <label for="id_hotel" class="form-label">Hotel</label>
     <select name="id_hotel" id="id_hotel"
@@ -28,18 +29,18 @@
             required>
       <option value="">Selecciona hotel…</option>
       @foreach($hoteles as $hotel)
-  <option value="{{ $hotel->id_hotel }}"
-    {{ old('id_hotel') == $hotel->id_hotel ? 'selected' : '' }}>
-    {{ $hotel->descripcion }}
-  </option>
-@endforeach
+        <option value="{{ $hotel->id_hotel }}"
+            {{ old('id_hotel') == $hotel->id_hotel ? 'selected' : '' }}>
+            {{ $hotel->descripcion }}
+        </option>
+        @endforeach
 
     </select>
     @error('id_hotel')
       <div class="invalid-feedback">{{ $message }}</div>
     @enderror
   </div>
-@endunless
+@endif
 
             <!-- Tipo de Trayecto -->
             <div class="mb-3">

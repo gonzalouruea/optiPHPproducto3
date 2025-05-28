@@ -61,11 +61,12 @@
 
             <div class="mb-3">
                 <label class="form-label">Hotel (destino/recogida)</label>
+            
                 <select name="id_hotel" class="form-select @error('id_hotel') is-invalid @enderror" required>
                     @foreach($hoteles as $hotel)
                         <option value="{{ $hotel->id_hotel }}" 
                             {{ old('id_hotel', $reserva->id_hotel) == $hotel->id_hotel ? 'selected' : '' }}>
-                            {{ $hotel->Usuario }} ({{ $hotel->descripcion }})
+                            {{ $hotel->descripcion }}
                         </option>
                     @endforeach
                 </select>

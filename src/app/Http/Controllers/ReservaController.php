@@ -116,7 +116,7 @@ class ReservaController extends Controller
       ? Viajero::select('id_viajero', 'email')->get()
       : collect();
 
-    $hoteles = Auth::user()->rol === 'usuario'
+    $hoteles = Auth::user()->rol != 'usuario'
       ? Hotel::all()
       : collect();
 
@@ -125,11 +125,77 @@ class ReservaController extends Controller
   }
 
 
+  public function edit(Request $request, int $idReserva)
+  {
+    $reserva = Reserva::findOrFail($idReserva);
+    $vehiculos = Vehiculo::all();
+    $hoteles =  Hotel::all();
 
-
+    return view('reservas.edit', compact('reserva', 'vehiculos', 'hoteles'));
+  }
 
   /** almacena la reserva + cálculo de comisión */
   // En ReservaController@store
+
+   public function update(Request $r, int $idReserva)
+  {
+    $user = Auth::user();
+    $reserva = Reserva::findOrFail($idReserva);
+
+    // 1) Validaciones (añade id_hotel)
+    if ($user->rol === 'corporativo') {
+      $r->validate([
+        'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+        'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+        // … resto…
+      ]);
+    } elseif ($user->rol == 'usuario') {
+      $r->validate([
+        'id_hotel' => 'required|exists:transfer_hotel,id_hotel',
+        'id_vehiculo' => 'required|exists:transfer_vehiculo,id_vehiculo',
+        'id_tipo_reserva' => 'required|exists:transfer_tipo_reserva,id_tipo_reserva',
+        // … resto…
+      ]);
+    }
+    // 2) Determina el hotel:
+    if ($user->rol === 'corporativo') {
+      // Para corporativo uso el hotel asociado a su cuenta
+      $hotel = $user->hotel;
+    } else {
+      // Para admin/usuario uso el hotel que venga en el request
+      $hotel = Hotel::findOrFail($r->id_hotel);
+    }
+
+    // 3) Precio y comisión (idéntico)
+    if ($hotel && $hotel->id_zona) {
+      $precio = $this->calcularPrecio($hotel->id_zona, $r->id_vehiculo, $r->id_tipo_reserva);
+      $comision = round($precio * $hotel->comision / 100, 2);
+    } else {
+      $precio = $this->calcularPrecioDefault($r->id_vehiculo, $r->id_tipo_reserva);
+      $comision = 0;
+    }
+
+    Reserva::where('id_reserva', $idReserva)->update([
+      'localizador' => $reserva->localizador, // No cambiamos el localizador
+      'id_hotel' => $hotel->id_hotel,        
+      'id_tipo_reserva' => $r->id_tipo_reserva,
+      'email_cliente' => $user->email,
+      'fecha_modificacion' => now(),
+      'fecha_entrada' => $r->fecha_entrada,
+      'hora_entrada' => $r->hora_entrada,
+      'fecha_vuelo_salida' => $r->fecha_vuelo_salida,
+      'hora_vuelo_salida' => $r->hora_vuelo_salida,
+      'numero_vuelo_entrada' => $r->numero_vuelo_entrada,
+      'origen_vuelo_entrada' => $r->origen_vuelo_entrada,
+      'hora_recogida' => $r->hora_recogida,
+      'num_viajeros' => $r->num_viajeros,
+      'id_vehiculo' => $r->id_vehiculo,
+      'precio' => $precio,
+      'comision_hotel' => $comision,
+    ]);
+
+    return back()->with('success', 'Reserva actualizada correctamente.');
+  }
 
   public function store(Request $r)
   {
